@@ -16,8 +16,71 @@
 <a href="https://www.cedarframe.com">the BEST real estate business in the world</a>
 <a href="https://www.hudl.com/profile/24708207/Gavin-Carvajal">most mediocre athlete in allen academy history</a>
 
+<button id="colorButton">Change color</button>
+
+<button id="factButton">Tell Me A Fact</button>
+<p id="factDisplay"></p>
+
+<button id="countButton">Clicked 0 times</button>
+
 <script>
   console.log("Hello from Javascript!");
+
+  const button = document.querySelector("#colorButton");
+  const heading = document.querySelector("h1");
+
+  let isNavy = false;
+
+  button.addEventListener("click", function (e) {
+    if (isNavy === true) {
+      heading.style.color = "magenta";
+      isNavy = false;
+    } else {
+      heading.style.color = "navy";
+      isNavy = true;
+    }
+  });
+
+  const facts = [
+    "Gavin is greasy",
+    "I hate Amy Schumer",
+    "My favorite movie is Cars 2",
+    "I am 6'1\"",
+    "I am 200lbs of lean mass",
+"Will's parents did not give him a name until he was 4 years old",
+"Kanye West is my favorite musical artist",
+"hi",
+"Hello",
+"He's a big big boy he's the biggest boy"
+  ];
+
+  const factButton = document.querySelector("#factButton");
+  const factDisplay = document.querySelector("#factDisplay");
+
+  let remainingFacts = [];
+  let lastFact = null;
+
+  factButton.addEventListener("click", function () {
+    if (remainingFacts.length === 0) {
+      remainingFacts = facts.slice();
+    }
+    let randomIndex = Math.floor(Math.random() * remainingFacts.length);
+    if (remainingFacts[randomIndex] === lastFact && remainingFacts.length > 1) {
+      randomIndex = (randomIndex + 1) % remainingFacts.length;
+    }
+    const randomFact = remainingFacts[randomIndex];
+    remainingFacts.splice(randomIndex, 1);
+    lastFact = randomFact;
+    factDisplay.textContent = randomFact;
+  });
+
+  const countButton = document.querySelector("#countButton");
+  let count = 0;
+
+  countButton.addEventListener("click", function () {
+    count = count + 1;
+    countButton.textContent = "Clicked " + count + " times";
+  });
 </script>
 </body>
 </html>
