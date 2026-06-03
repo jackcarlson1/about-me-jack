@@ -13,3 +13,16 @@ This week I added three buttons to the About Me page using JavaScript:
   fact once before repeating, and never shows the same fact twice in a row.
 - **Clicked N times** — A counter button that starts at "Clicked 0 times" and counts
   up by one with every click.
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file.
+
+## Acknowledgments
+
+- Built as a personal learning project while teaching myself HTML, CSS, and JavaScript.
+- Tutorials and references I followed: _(add any here — e.g. MDN Web Docs, a YouTube series, etc.)_
+- Claude (Anthropic's AI assistant) acted as my coding collaborator — explaining
+  concepts, walking me through Git and GitHub, and helping me write and debug the
+  JavaScript. I typed in my own content and made the final decisions.
+
