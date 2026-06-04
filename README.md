@@ -1,7 +1,15 @@
-# personal-lab
+# Jack Carlson — About Me
 
-My personal coding lab. Contains my **About Me** web page (`about-me/index.html`),
-built while learning HTML, CSS, and JavaScript.
+A personal About Me web page built while learning HTML, CSS, and JavaScript.
+
+🔗 **Live site: [about-me-jack.vercel.app](https://about-me-jack.vercel.app)**
+
+![Screenshot of the About Me page](about-me/profile.png)
+
+---
+
+This repository is my personal coding lab. The main project is the **About Me**
+page in [`about-me/index.html`](about-me/index.html).
 
 ## Interactive buttons
 
