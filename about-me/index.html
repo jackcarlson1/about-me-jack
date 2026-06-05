@@ -47,8 +47,44 @@
   #williamOverlay img {
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+  }
+  #gizmoButton {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
+  }
+  #gizmoOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    z-index: 900;
+  }
+  #gizmoOverlay img {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     border-radius: 0;
+  }
+  @keyframes fall {
+    to {
+      transform: translateY(110vh);
+    }
+  }
+  .raindrop {
+    position: fixed;
+    top: -60px;
+    font-weight: bold;
+    color: magenta;
+    z-index: 2000;
+    pointer-events: none;
+    animation: fall linear forwards;
   }
 </style>
 </head>
@@ -56,6 +92,10 @@
 <button id="williamButton">william</button>
 <div id="williamOverlay">
   <img src="william.jpeg" alt="William">
+</div>
+<button id="gizmoButton">gizmo</button>
+<div id="gizmoOverlay">
+  <img src="gizmo.jpeg" alt="Gizmo">
 </div>
 <h1 style="color: magenta;">hi world</h1>
 <img src="profile.png" alt="Photo of me" style="width: 500px;">
@@ -142,7 +182,26 @@
   countButton.addEventListener("click", function () {
     count = count + 1;
     countButton.textContent = "Clicked " + count + " times";
+    if (count === 67) {
+      rain67();
+    }
   });
+
+  function rain67() {
+    for (let i = 0; i < 60; i++) {
+      const drop = document.createElement("div");
+      drop.textContent = "67";
+      drop.className = "raindrop";
+      drop.style.left = (Math.random() * 100) + "vw";
+      drop.style.fontSize = (Math.random() * 30 + 20) + "px";
+      drop.style.animationDuration = (Math.random() * 2 + 2) + "s";
+      drop.style.animationDelay = (Math.random() * 1.5) + "s";
+      document.body.appendChild(drop);
+      setTimeout(function () {
+        drop.remove();
+      }, 6000);
+    }
+  }
 
   const williamButton = document.querySelector("#williamButton");
   const williamOverlay = document.querySelector("#williamOverlay");
@@ -154,6 +213,19 @@
     } else {
       williamOverlay.style.display = "block";
       williamButton.textContent = "no william";
+    }
+  });
+
+  const gizmoButton = document.querySelector("#gizmoButton");
+  const gizmoOverlay = document.querySelector("#gizmoOverlay");
+
+  gizmoButton.addEventListener("click", function () {
+    if (gizmoOverlay.style.display === "block") {
+      gizmoOverlay.style.display = "none";
+      gizmoButton.textContent = "gizmo";
+    } else {
+      gizmoOverlay.style.display = "block";
+      gizmoButton.textContent = "no gizmo";
     }
   });
 </script>
