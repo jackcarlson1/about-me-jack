@@ -6,20 +6,64 @@
 <title>Jack Carlson — About Me</title>
 <meta name="description" content="The personal About Me page of Jack Carlson">
 <style>
+  body, button {
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
   a, button {
-    display: block;
     margin-bottom: 8px;
+  }
+  img {
+    border-radius: 20px;
+  }
+  #countButton {
+    padding: 20px 40px;
+    font-size: 20px;
+    border-radius: 12px;
+    background-color: white;
+    border: 1px solid #cccccc;
+  }
+  #williamButton {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+  }
+  #williamOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    z-index: 900;
+  }
+  #williamOverlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 0;
   }
 </style>
 </head>
 <body>
+<button id="williamButton">william</button>
+<div id="williamOverlay">
+  <img src="william.jpeg" alt="William">
+</div>
 <h1 style="color: magenta;">hi world</h1>
 <img src="profile.png" alt="Photo of me" style="width: 500px;">
 <p>Me and my father in Bodrum, Turkey in Summer of 2025</p>
 <a href="https://allenacademy.org">My school</a>
 <a href="https://nauticalarch.org">INA</a>
 
-<button id="colorButton">Change color</button>
+<button id="colorButton">Change color to rainbow</button>
 
 <button id="factButton">Tell me a fact</button>
 <p id="factDisplay"></p>
@@ -32,15 +76,35 @@
   const button = document.querySelector("#colorButton");
   const heading = document.querySelector("h1");
 
-  let isNavy = false;
+  let currentColor = "magenta";
 
   button.addEventListener("click", function (e) {
-    if (isNavy === true) {
+    if (currentColor === "red") {
+      // navy -> magenta
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
       heading.style.color = "magenta";
-      isNavy = false;
+      currentColor = "magenta";
+      button.textContent = "Change color to RAINBOW";
+    } else if (currentColor === "magenta") {
+      // magenta -> rainbow
+      heading.style.width = "fit-content";
+      heading.style.backgroundImage =
+        "linear-gradient(to right, red, orange, gold, green, blue, purple)";
+      heading.style.webkitBackgroundClip = "text";
+      heading.style.backgroundClip = "text";
+      heading.style.color = "transparent";
+      currentColor = "rainbow";
+      button.textContent = "Change color to red";
     } else {
-      heading.style.color = "navy";
-      isNavy = true;
+      // rainbow -> red
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
+      heading.style.color = "red";
+      currentColor = "red";
+      button.textContent = "Change color to magenta";
     }
   });
 
@@ -78,6 +142,19 @@
   countButton.addEventListener("click", function () {
     count = count + 1;
     countButton.textContent = "Clicked " + count + " times";
+  });
+
+  const williamButton = document.querySelector("#williamButton");
+  const williamOverlay = document.querySelector("#williamOverlay");
+
+  williamButton.addEventListener("click", function () {
+    if (williamOverlay.style.display === "block") {
+      williamOverlay.style.display = "none";
+      williamButton.textContent = "william";
+    } else {
+      williamOverlay.style.display = "block";
+      williamButton.textContent = "no william";
+    }
   });
 </script>
 </body>
