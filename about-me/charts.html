@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Top Songs — Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>My Top 10 Songs — May 2026</h1>
+
+  <canvas id="songChart"></canvas>
+
+  <script>
+    const songs = [
+      { "song": "Janice STFU", "artist": "Drake", "plays": 40 },
+      { "song": "Highwayman", "artist": "Highwaymen", "plays": 31 },
+      { "song": "Diamonds from Africa", "artist": "Future", "plays": 17 },
+      { "song": "The Night Is Still Young", "artist": "Nicki Minaj", "plays": 17 },
+      { "song": "Surf (feat. Gunna)", "artist": "Young Thug", "plays": 17 },
+      { "song": "Three", "artist": "Future & Young Thug", "plays": 16 },
+      { "song": "Ran To Atlanta", "artist": "Drake, Future & Molly Santana", "plays": 14 },
+      { "song": "Furthest Thing", "artist": "Drake", "plays": 14 },
+      { "song": "Rosemary", "artist": "Deftones", "plays": 13 },
+      { "song": "Super Bass", "artist": "Nicki Minaj", "plays": 13 }
+    ];
+
+    const labels = songs.map(function (s) { return s.song; });
+    const playCounts = songs.map(function (s) { return s.plays; });
+
+    const canvas = document.querySelector("#songChart");
+
+    new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Plays in May 2026",
+          data: playCounts,
+          backgroundColor: "magenta"
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
