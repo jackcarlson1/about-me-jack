@@ -7,7 +7,7 @@
 <meta name="description" content="The personal About Me page of Jack Carlson">
 <style>
   body, button {
-    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   body {
     display: flex;
@@ -15,8 +15,17 @@
     align-items: center;
     text-align: center;
   }
+  h1 {
+    font-weight: 700;
+  }
   a, button {
     margin-bottom: 8px;
+  }
+  button {
+    transition: transform 0.08s ease;
+  }
+  button:active {
+    transform: scale(0.94);
   }
   img {
     border-radius: 20px;
@@ -52,8 +61,8 @@
   }
   #gizmoButton {
     position: fixed;
-    top: 16px;
-    left: 16px;
+    top: 56px;
+    right: 16px;
     z-index: 1000;
   }
   #gizmoOverlay {
@@ -72,6 +81,26 @@
     object-fit: contain;
     border-radius: 0;
   }
+  #factDisplay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 80%;
+    padding: 24px 32px;
+    font-size: 22px;
+    color: black;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 1500;
+  }
+  #factDisplay.show {
+    opacity: 1;
+  }
   @keyframes fall {
     to {
       transform: translateY(110vh);
@@ -86,6 +115,46 @@
     pointer-events: none;
     animation: fall linear forwards;
   }
+  #sidebar {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 800;
+  }
+  #sidebarToggle {
+    margin-bottom: 0;
+  }
+  #sidebarContent {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 28px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transform: scale(1);
+    transform-origin: top left;
+    opacity: 1;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #sidebarContent button {
+    padding: 14px 28px;
+    font-size: 16px;
+    white-space: nowrap;
+    border-radius: 12px;
+    background-color: transparent;
+    border: 1px solid #cccccc;
+  }
+  #sidebar.collapsed #sidebarContent {
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -97,21 +166,25 @@
 <div id="gizmoOverlay">
   <img src="gizmo.jpeg" alt="Gizmo">
 </div>
-<h1 style="color: magenta;">hi world</h1>
+
+<div id="sidebar" class="collapsed">
+  <button id="sidebarToggle">▼</button>
+  <div id="sidebarContent">
+    <button id="colorButton">🎨 Change color</button>
+    <button id="chartButton">🎵 Music replay</button>
+  </div>
+</div>
+
+<h1 style="color: magenta;">Jack Carlson</h1>
 <img src="profile.png" alt="Photo of me" style="width: 500px;">
 <p>Me and my father in Bodrum, Turkey in Summer of 2025</p>
-<a href="https://allenacademy.org">My school</a>
-<a href="https://nauticalarch.org">INA</a>
-
-<button id="colorButton">Change color to rainbow</button>
+<a href="https://allenacademy.org" target="_blank" rel="noopener">My school</a>
+<a href="https://nauticalarch.org" target="_blank" rel="noopener">INA</a>
 
 <button id="factButton">Tell me a fact</button>
 <p id="factDisplay"></p>
 
 <button id="countButton">Clicked 0 times</button>
-
-<h2>My Top 10 Songs — May 2026</h2>
-<ol id="songList"></ol>
 
 <script>
   console.log("Hello from Javascript!");
@@ -122,15 +195,7 @@
   let currentColor = "magenta";
 
   button.addEventListener("click", function (e) {
-    if (currentColor === "red") {
-      // navy -> magenta
-      heading.style.width = "auto";
-      heading.style.backgroundImage = "none";
-      heading.style.webkitBackgroundClip = "border-box";
-      heading.style.color = "magenta";
-      currentColor = "magenta";
-      button.textContent = "Change color to RAINBOW";
-    } else if (currentColor === "magenta") {
+    if (currentColor === "magenta") {
       // magenta -> rainbow
       heading.style.width = "fit-content";
       heading.style.backgroundImage =
@@ -139,15 +204,41 @@
       heading.style.backgroundClip = "text";
       heading.style.color = "transparent";
       currentColor = "rainbow";
-      button.textContent = "Change color to red";
-    } else {
+    } else if (currentColor === "rainbow") {
       // rainbow -> red
       heading.style.width = "auto";
       heading.style.backgroundImage = "none";
       heading.style.webkitBackgroundClip = "border-box";
       heading.style.color = "red";
       currentColor = "red";
-      button.textContent = "Change color to magenta";
+    } else if (currentColor === "red") {
+      // red -> blue
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
+      heading.style.color = "blue";
+      currentColor = "blue";
+    } else if (currentColor === "blue") {
+      // blue -> orange
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
+      heading.style.color = "orange";
+      currentColor = "orange";
+    } else if (currentColor === "orange") {
+      // orange -> black
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
+      heading.style.color = "black";
+      currentColor = "black";
+    } else {
+      // black -> magenta
+      heading.style.width = "auto";
+      heading.style.backgroundImage = "none";
+      heading.style.webkitBackgroundClip = "border-box";
+      heading.style.color = "magenta";
+      currentColor = "magenta";
     }
   });
 
@@ -164,6 +255,7 @@
 
   let remainingFacts = [];
   let lastFact = null;
+  let factTimeout;
 
   factButton.addEventListener("click", function () {
     if (remainingFacts.length === 0) {
@@ -176,7 +268,14 @@
     const randomFact = remainingFacts[randomIndex];
     remainingFacts.splice(randomIndex, 1);
     lastFact = randomFact;
+
     factDisplay.textContent = randomFact;
+    factDisplay.classList.add("show");
+
+    clearTimeout(factTimeout);
+    factTimeout = setTimeout(function () {
+      factDisplay.classList.remove("show");
+    }, 3000);
   });
 
   const countButton = document.querySelector("#countButton");
@@ -232,26 +331,23 @@
     }
   });
 
-  const songs = [
-    { "song": "Janice STFU", "artist": "Drake", "plays": 40 },
-    { "song": "Highwayman", "artist": "Highwaymen", "plays": 31 },
-    { "song": "Diamonds from Africa", "artist": "Future", "plays": 17 },
-    { "song": "The Night Is Still Young", "artist": "Nicki Minaj", "plays": 17 },
-    { "song": "Surf (feat. Gunna)", "artist": "Young Thug", "plays": 17 },
-    { "song": "Three", "artist": "Future & Young Thug", "plays": 16 },
-    { "song": "Ran To Atlanta", "artist": "Drake, Future & Molly Santana", "plays": 14 },
-    { "song": "Furthest Thing", "artist": "Drake", "plays": 14 },
-    { "song": "Rosemary", "artist": "Deftones", "plays": 13 },
-    { "song": "Super Bass", "artist": "Nicki Minaj", "plays": 13 }
-  ];
+  const chartButton = document.querySelector("#chartButton");
 
-  const songList = document.querySelector("#songList");
+  chartButton.addEventListener("click", function () {
+    window.location.href = "charts.html";
+  });
 
-  for (let i = 0; i < songs.length; i++) {
-    const item = document.createElement("li");
-    item.textContent = songs[i].song + " — " + songs[i].artist + " — " + songs[i].plays + " plays";
-    songList.appendChild(item);
-  }
+  const sidebar = document.querySelector("#sidebar");
+  const sidebarToggle = document.querySelector("#sidebarToggle");
+
+  sidebarToggle.addEventListener("click", function () {
+    sidebar.classList.toggle("collapsed");
+    if (sidebar.classList.contains("collapsed")) {
+      sidebarToggle.textContent = "▼";
+    } else {
+      sidebarToggle.textContent = "▲ collapse menu";
+    }
+  });
 </script>
 </body>
 </html>

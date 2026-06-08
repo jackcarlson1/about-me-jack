@@ -22,6 +22,10 @@ This week I added three buttons to the About Me page using JavaScript:
 - **Clicked N times** — A counter button that starts at "Clicked 0 times" and counts
   up by one with every click.
 
+## Data
+
+Song play counts in [`about-me/data.json`](about-me/data.json) come from my personal Apple Music Replay listening history for May 2026.
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file.
