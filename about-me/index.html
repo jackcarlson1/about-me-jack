@@ -172,12 +172,12 @@
   <div id="sidebarContent">
     <button id="colorButton">🎨 Change color</button>
     <button id="chartButton">🎵 Music replay</button>
+    <button id="wantedButton">🚨 Most Wanted</button>
   </div>
 </div>
 
 <h1 style="color: magenta;">Jack Carlson</h1>
 <img src="profile.png" alt="Photo of me" style="width: 500px;">
-<p>Me and my father in Bodrum, Turkey in Summer of 2025</p>
 <a href="https://allenacademy.org" target="_blank" rel="noopener">My school</a>
 <a href="https://nauticalarch.org" target="_blank" rel="noopener">INA</a>
 
@@ -347,6 +347,11 @@
     } else {
       sidebarToggle.textContent = "▲ collapse menu";
     }
+  });
+
+  const wantedButton = document.querySelector("#wantedButton");
+  wantedButton.addEventListener("click", function () {
+    window.location.href = "wanted.html";
   });
 </script>
 </body>
