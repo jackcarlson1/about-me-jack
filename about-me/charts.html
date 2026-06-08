@@ -3,52 +3,643 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Top Songs — Chart</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Music Replay — Jack Carlson</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 32px 60px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+      opacity: 1;
+      transition: opacity 0.35s ease;
+    }
+    body.fade-out {
+      opacity: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    #backButton {
+      padding: 8px 14px;
+      font-size: 15px;
+      border-radius: 10px;
+      background-color: transparent;
+      border: 1px solid #555555;
+      color: #ffffff;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+    }
+    #backButton:active {
+      transform: scale(0.94);
+    }
+    .replay-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+    #yearSelect {
+      background-color: #1c1c1e;
+      color: #ffffff;
+      border: 1px solid #555555;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .months {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+      margin: 18px 0 32px;
+    }
+    .month-tab {
+      background: none;
+      border: none;
+      color: #777777;
+      font-size: 17px;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s ease;
+    }
+    .month-tab.active {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .headline {
+      font-size: 34px;
+      font-weight: 700;
+      color: #777777;
+      margin: 0 0 44px;
+      max-width: 700px;
+      line-height: 1.2;
+    }
+    .headline strong {
+      color: #ffffff;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+
+    .artists-row, .albums-row {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 44px;
+    }
+    .artist-card {
+      flex: 0 0 180px;
+      height: 220px;
+      border-radius: 14px;
+      background-color: #1c1c1e;
+      background-size: cover;
+      background-position: center;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .artist-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.75));
+    }
+    .artist-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    .rank-num {
+      font-size: 40px;
+      font-weight: 700;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+    .artist-name {
+      font-weight: 600;
+      font-size: 15px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+    .artist-min {
+      font-size: 13px;
+      color: #dddddd;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .songs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(5, auto);
+      grid-auto-flow: column;
+      gap: 16px 28px;
+      margin-bottom: 44px;
+    }
+    .song-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .song-art {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background-color: #222222;
+    }
+    .song-rank {
+      width: 22px;
+      text-align: right;
+      color: #aaaaaa;
+      font-size: 14px;
+      flex: 0 0 auto;
+    }
+    .song-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .song-title {
+      font-weight: 600;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .song-sub {
+      font-size: 13px;
+      color: #aaaaaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .album-card {
+      flex: 0 0 150px;
+    }
+    .album-art {
+      width: 150px;
+      height: 150px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 8px;
+      background-color: #222222;
+    }
+    .album-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .album-sub {
+      font-size: 13px;
+      color: #aaaaaa;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .headline,
+    .section-title,
+    .artist-card,
+    .song-row,
+    .album-card {
+      animation: fadeUp 0.5s ease both;
+    }
+    .artist-card,
+    .song-row,
+    .album-card {
+      animation-delay: calc(var(--i, 0) * 45ms);
+    }
+    .services {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 4px 0 10px;
+    }
+    .services-label {
+      color: #777777;
+      font-size: 14px;
+      margin-right: 4px;
+    }
+    .service-btn {
+      background-color: #1c1c1e;
+      color: #ffffff;
+      border: 1px solid #3a3a3c;
+      border-radius: 16px;
+      padding: 6px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+    }
+    .service-btn:active {
+      transform: scale(0.94);
+    }
+    .service-btn.active {
+      background-color: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+    .artist-card,
+    .song-row,
+    .album-card {
+      cursor: pointer;
+    }
+    .empty-state {
+      color: #888888;
+      font-size: 18px;
+      margin: 40px 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>My Top 10 Songs — May 2026</h1>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button id="backButton">&larr; Back</button>
+      <h1 class="replay-title">Replay</h1>
+    </div>
+    <select id="yearSelect">
+      <option value="2026">2026</option>
+    </select>
+  </div>
 
-  <canvas id="songChart"></canvas>
+  <div class="services" id="services">
+    <span class="services-label">Open links in:</span>
+    <button class="service-btn" data-service="apple">Apple Music</button>
+    <button class="service-btn" data-service="spotify">Spotify</button>
+    <button class="service-btn" data-service="youtube">YouTube Music</button>
+    <button class="service-btn" data-service="amazon">Amazon Music</button>
+  </div>
+
+  <div class="months" id="months"></div>
+
+  <p class="headline" id="headline"></p>
+
+  <div id="content"></div>
 
   <script>
-    const songs = [
-      { "song": "Janice STFU", "artist": "Drake", "plays": 40 },
-      { "song": "Highwayman", "artist": "Highwaymen", "plays": 31 },
-      { "song": "Diamonds from Africa", "artist": "Future", "plays": 17 },
-      { "song": "The Night Is Still Young", "artist": "Nicki Minaj", "plays": 17 },
-      { "song": "Surf (feat. Gunna)", "artist": "Young Thug", "plays": 17 },
-      { "song": "Three", "artist": "Future & Young Thug", "plays": 16 },
-      { "song": "Ran To Atlanta", "artist": "Drake, Future & Molly Santana", "plays": 14 },
-      { "song": "Furthest Thing", "artist": "Drake", "plays": 14 },
-      { "song": "Rosemary", "artist": "Deftones", "plays": 13 },
-      { "song": "Super Bass", "artist": "Nicki Minaj", "plays": 13 }
-    ];
-
-    const labels = songs.map(function (s) { return s.song; });
-    const playCounts = songs.map(function (s) { return s.plays; });
-
-    const canvas = document.querySelector("#songChart");
-
-    new Chart(canvas, {
-      type: "bar",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Plays in May 2026",
-          data: playCounts,
-          backgroundColor: "magenta"
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+    const replayData = {
+      "2026": {
+        "January": {
+          minutes: 5585,
+          artists: [
+            { name: "Future", minutes: 860, image: "future.jpg", appleUrl: "https://music.apple.com/us/artist/future/128050210?uo=4" },
+            { name: "Drake", minutes: 550, image: "drake.jpg", appleUrl: "https://music.apple.com/us/artist/drake/271256?uo=4" },
+            { name: "Playboi Carti", minutes: 471, image: "playboi-carti.jpg", appleUrl: "https://music.apple.com/us/artist/playboi-carti/982372505?uo=4" },
+            { name: "Travis Scott", minutes: 365, image: "travis-scott.jpg", appleUrl: "https://music.apple.com/us/artist/travis-scott/549236696?uo=4" },
+            { name: "Young Thug", minutes: 348, image: "young-thug.jpg", appleUrl: "https://music.apple.com/us/artist/young-thug/81886939?uo=4" }
+          ],
+          songs: [
+            { song: "say dat", artist: "sosocamo", plays: 29, art: "say-dat.jpg" },
+            { song: "MASSAGING ME", artist: "Future", plays: 22, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c8/4c/fa/c84cfa03-1916-89f1-5362-03425fbe2ff9/196589073709.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/massaging-me-instrumental/1623692685?i=1623693330&uo=4" },
+            { song: "WAIT FOR U (feat. Drake & Tems)", artist: "Future", plays: 17, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c8/4c/fa/c84cfa03-1916-89f1-5362-03425fbe2ff9/196589073709.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/wait-for-u-feat-drake-tems/1621610722?i=1621611495&uo=4" },
+            { song: "on one tonight", artist: "Gunna", plays: 15, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f6/84/c3/f684c30e-9ea6-7532-429d-de6d22345614/075679660343.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/on-one-tonight/1745391617?i=1745391797&uo=4" },
+            { song: "GOLD STACKS", artist: "Future", plays: 14, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c8/4c/fa/c84cfa03-1916-89f1-5362-03425fbe2ff9/196589073709.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/gold-stacks-instrumental/1623692685?i=1623693090&uo=4" },
+            { song: "DA WIZARD", artist: "Travis Scott", plays: 13, art: "da-wizard.jpg" },
+            { song: "Stir Fry", artist: "Migos", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/ef/3a/a7/ef3aa7ad-cd69-2bb4-ce18-6c4de937a5e3/17UM1IM64709.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/stir-fry/1440914594?i=1440914607&uo=4" },
+            { song: "PUFFIN ON ZOOTIEZ", artist: "Future", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/fe/b6/46/feb64670-4fe7-bbc0-1101-c5f11bfb6905/196871937399.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/puffin-on-zootiez/1621610722?i=1621611233&uo=4" },
+            { song: "What You Saying", artist: "Lil Uzi Vert", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ee/24/92/ee249222-bfef-2abe-b8d0-16f0f35a3b17/8721465006940.png/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/what-you-saying/1863528316?i=1863528318&uo=4" },
+            { song: "SAY GANG", artist: "Void, mikeeysmind, storm00831, Ech0", plays: 12, art: "say-gang.jpg" },
+            { song: "712PM", artist: "Future", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c8/4c/fa/c84cfa03-1916-89f1-5362-03425fbe2ff9/196589073709.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/712pm/1621610722?i=1621610728&uo=4" },
+            { song: "Fair Trade (feat. Travis Scott)", artist: "Drake", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cb/6b/5f/cb6b5fc3-8d35-908a-18e6-6f8eda46ce11/21UM1IM07521.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/fair-trade-feat-travis-scott/1584449196?i=1584449209&uo=4" },
+            { song: "4L", artist: "21 Savage", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/07/94/f7/0794f7c3-0042-6aa8-022e-ae008868eb75/886447365144.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/4l/1447452167?i=1447452185&uo=4" },
+            { song: "I'M ON ONE (feat. Drake)", artist: "Future", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/33/aa/6c/33aa6ca4-cb53-d64a-2981-5fd79fdc57ce/196871990851.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/im-on-one-feat-drake/1621610722?i=1621611649&uo=4" },
+            { song: "Lost", artist: "Frank Ocean", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/04/f8/63/04f863fc-2852-604f-c910-a97ac069506b/12UMGIM40339.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/lost-remix-mixed/1689851333?i=1689851342&uo=4" }
+          ],
+          albums: [
+            { album: "OCTANE", artist: "Don Toliver", minutes: 72, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/octane/1873328276?uo=4" },
+            { album: "AT.LONG.LAST.A$AP", artist: "A$AP Rocky", minutes: 32, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/9f/9b/4c/9f9b4cbc-5910-51fb-8486-adf3b89bc973/886444594837.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/at-long-last-a%24ap/994721471?uo=4" },
+            { album: "I NEVER LIKED YOU", artist: "Future", minutes: 23, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c8/4c/fa/c84cfa03-1916-89f1-5362-03425fbe2ff9/196589073709.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/i-never-liked-you/1621610722?uo=4" },
+            { album: "Don't Be Dumb", artist: "A$AP Rocky", minutes: 22, art: "dont-be-dumb.jpg" },
+            { album: "With Heaven On Top", artist: "Zach Bryan", minutes: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cf/15/82/cf158280-e899-3a6f-3060-b55255200a3c/093624823384.jpg/400x400bb.jpg" }
+          ]
+        },
+        "February": {
+          minutes: 5216,
+          artists: [
+            { name: "Future", minutes: 610, image: "future.jpg", appleUrl: "https://music.apple.com/us/artist/future/128050210?uo=4" },
+            { name: "Don Toliver", minutes: 597, image: "don-toliver.jpg", appleUrl: "https://music.apple.com/us/artist/don-toliver/1237012992?uo=4" },
+            { name: "Drake", minutes: 563, image: "drake.jpg", appleUrl: "https://music.apple.com/us/artist/drake/271256?uo=4" },
+            { name: "Young Thug", minutes: 354, image: "young-thug.jpg", appleUrl: "https://music.apple.com/us/artist/young-thug/81886939?uo=4" },
+            { name: "Travis Scott", minutes: 344, image: "travis-scott.jpg", appleUrl: "https://music.apple.com/us/artist/travis-scott/549236696?uo=4" }
+          ],
+          songs: [
+            { song: "Sweet Home", artist: "Don Toliver", plays: 26, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/sweet-home/1873328276?i=1873328339&uo=4" },
+            { song: "Body", artist: "Don Toliver", plays: 22, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/body/1873328276?i=1873328281&uo=4" },
+            { song: "Rosary (feat. Travis Scott)", artist: "Don Toliver", plays: 20, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/rosary-feat-travis-scott/1873328276?i=1873328323&uo=4" },
+            { song: "E85", artist: "Don Toliver", plays: 20, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/e85/1873328276?i=1873328279&uo=4" },
+            { song: "Forgot I Was Famous", artist: "knivesysl", plays: 16, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1b/34/08/1b340858-8ada-cc91-3efa-48fb01f8f862/10410.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/forgot-i-was-famous/6768661287?i=6768661288&uo=4" },
+            { song: "ATM", artist: "Don Toliver", plays: 15, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/atm/1873328276?i=1873328321&uo=4" },
+            { song: "Bodies", artist: "Offset & JID", plays: 14, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e3/3b/1e/e33b1e58-b6db-c1da-1187-29d62f278be4/25UMGIM92351.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/bodies/1823832484?i=1823832485&uo=4" },
+            { song: "TMU", artist: "Don Toliver", plays: 13, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/tmu/1873328276?i=1873328335&uo=4" },
+            { song: "Blank Space (Taylor's Version)", artist: "Taylor Swift", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/11/a6/80/11a680e6-2e48-08fa-5e87-3f18e838d31f/23UM1IM11868.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/blank-space-taylors-version/1713845538?i=1713845737&uo=4" },
+            { song: "PUFFIN ON ZOOTIEZ", artist: "Future", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/62/d5/31/62d53149-d488-a115-4e3c-3c73972c24bb/196589180544.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/puffin-on-zootiez/1621610722?i=1621611233&uo=4" },
+            { song: "4 Raws", artist: "EsDeeKid", plays: 12, art: "4-raws.jpg" },
+            { song: "DA WIZARD", artist: "Travis Scott", plays: 11, art: "da-wizard.jpg" },
+            { song: "Secondhand (feat. Rema)", artist: "Don Toliver", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/secondhand-feat-rema/1873328276?i=1873328285&uo=4" },
+            { song: "Gemstone", artist: "Don Toliver", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/gemstone/1873328276?i=1873328331&uo=4" },
+            { song: "Fair Trade (feat. Travis Scott)", artist: "Drake", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cb/6b/5f/cb6b5fc3-8d35-908a-18e6-6f8eda46ce11/21UM1IM07521.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/fair-trade-feat-travis-scott/1584449196?i=1584449209&uo=4" }
+          ],
+          albums: [
+            { album: "OCTANE", artist: "Don Toliver", minutes: 87, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/octane/1873328276?uo=4" },
+            { album: "Certified Lover Boy", artist: "Drake", minutes: 13, art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cb/6b/5f/cb6b5fc3-8d35-908a-18e6-6f8eda46ce11/21UM1IM07521.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/certified-lover-boy/1584449196?uo=4" },
+            { album: "The Fall-Off", artist: "J. Cole", minutes: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/31/56/a6/3156a612-c10c-7703-32b9-88a14efa3df0/26UMGIM17314.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/the-fall-off/1876341626?uo=4" },
+            { album: "Ca$ino", artist: "Baby Keem", minutes: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ca/ae/34/caae3487-056d-0268-7d03-c27fd147bc12/196874265543.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/ca%24ino/1889659166?uo=4" },
+            { album: "VULTURES 1", artist: "¥$, Kanye West & Ty Dolla $ign", minutes: 6, art: "vultures-1.jpg" }
+          ]
+        },
+        "March": {
+          minutes: 4716,
+          artists: [
+            { name: "Future", minutes: 576, image: "future.jpg", appleUrl: "https://music.apple.com/us/artist/future/128050210?uo=4" },
+            { name: "Drake", minutes: 488, image: "drake.jpg", appleUrl: "https://music.apple.com/us/artist/drake/271256?uo=4" },
+            { name: "Young Thug", minutes: 299, image: "young-thug.jpg", appleUrl: "https://music.apple.com/us/artist/young-thug/81886939?uo=4" },
+            { name: "Don Toliver", minutes: 297, image: "don-toliver.jpg", appleUrl: "https://music.apple.com/us/artist/don-toliver/1237012992?uo=4" },
+            { name: "Travis Scott", minutes: 244, image: "travis-scott.jpg", appleUrl: "https://music.apple.com/us/artist/travis-scott/549236696?uo=4" }
+          ],
+          songs: [
+            { song: "FWU", artist: "Don Toliver & Mustard", plays: 16, art: "fwu.jpg" },
+            { song: "UP (feat. Rich The Kid, A$AP Ferg & SadBoi)", artist: "Denzel Curry", plays: 14, art: "up.jpg" },
+            { song: "Real Sisters", artist: "Future", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/21/01/d0/2101d0ef-079a-974e-317a-780275f8c269/886445328547.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/real-sisters/1017125737?i=1017125895&uo=4" },
+            { song: "MR RECOUP", artist: "21 Savage & Drake", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/de/61/31/de6131e2-a8ed-64c9-4904-f38b65b7f868/196873915715.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/mr-recoup/1860789017?i=1860789143&uo=4" },
+            { song: "Blow The Speaker .", artist: "fakemink", plays: 11, art: "blow-the-speaker.jpg" },
+            { song: "Dramatic Girl (feat. Che Ecru)", artist: "Drake", plays: 11, art: "dramatic-girl.jpg" },
+            { song: "Furthest Thing", artist: "Drake", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/5f/30/6d/5f306d67-bff8-2595-9d41-51be895d3208/00602537542321.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/furthest-thing/1440820956?i=1440821266&uo=4" },
+            { song: "Love", artist: "The Something Specials & Taylor Odin", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/79/b9/05/79b90550-3512-6825-1ce3-c7a1c5911181/197999939333_cover.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/love/1727242835?i=1727242836&uo=4" },
+            { song: "TMU", artist: "Don Toliver", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/tmu/1873328276?i=1873328335&uo=4" },
+            { song: "Conscience (feat. Future)", artist: "Kodak Black", plays: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/eb/10/97/eb1097b7-e6fd-b748-a368-302317df387d/075679899231.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/conscience-feat-future/1221488245?i=1221488259&uo=4" },
+            { song: "Butterflies (Right Now)", artist: "Metro Boomin, Roscoe Dash, Quavo & DJ Spinz", plays: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/02/ab/60/02ab6008-c0a0-f4cc-8560-11fe0937c951/25UM1IM06884.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/butterflies-right-now/1830382234?i=1830382347&uo=4" },
+            { song: "Sticky", artist: "Drake", plays: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/6d/31/ab/6d31abaf-7a07-05f1-13ad-72ec520b6bfb/22UMGIM67374.rgb.jpg/200x200bb.jpg" },
+            { song: "Rich Baby Daddy (feat. Sexyy Red & SZA)", artist: "Drake", plays: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/fa/9e/e6/fa9ee672-0880-2b5b-a69d-981e8fcb807e/23UM1IM09863.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/rich-baby-daddy-feat-sexyy-red-sza/1710694554?i=1710694759&uo=4" },
+            { song: "FATHER", artist: "Kanye West & Travis Scott", plays: 9, art: "father.jpg" },
+            { song: "overseas", artist: "Ken Carson", plays: 9, art: "overseas.jpg", appleUrl: "https://music.apple.com/us/album/overseas/1739186085?i=1739186207&uo=4" }
+          ],
+          albums: [
+            { album: "BULLY", artist: "Kanye West", minutes: 21, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/4c/78/0e/4c780ef8-f9cf-62f2-b956-2ceab8b81905/0692788731278_cover.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/bully-ep/1872771948?uo=4" },
+            { album: "DS2 (Deluxe)", artist: "Future", minutes: 15, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/21/01/d0/2101d0ef-079a-974e-317a-780275f8c269/886445328547.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/ds2-deluxe/1017125737?uo=4" },
+            { album: "ADL", artist: "Yeat", minutes: 9, art: "adl.jpg" },
+            { album: "DON'T TAP THE GLASS", artist: "Tyler, The Creator", minutes: 8, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/9e/2b/93/9e2b93b7-43a9-e814-e0ae-c55a1b7e17d6/196873463513.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/dont-tap-the-glass/1828766736?uo=4" },
+            { album: "Graduation", artist: "Kanye West", minutes: 5, art: "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/39/25/2d/39252d65-2d50-b991-0962-f7a98a761271/00602517483507.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/graduation/1442845779?uo=4" }
+          ]
+        },
+        "April": {
+          minutes: 4815,
+          artists: [
+            { name: "Future", minutes: 507, image: "future.jpg", appleUrl: "https://music.apple.com/us/artist/future/128050210?uo=4" },
+            { name: "Kanye West", minutes: 356, image: "kanye-west.jpg", appleUrl: "https://music.apple.com/us/artist/kanye-west/2715720?uo=4" },
+            { name: "Don Toliver", minutes: 315, image: "don-toliver.jpg", appleUrl: "https://music.apple.com/us/artist/don-toliver/1237012992?uo=4" },
+            { name: "Drake", minutes: 309, image: "drake.jpg", appleUrl: "https://music.apple.com/us/artist/drake/271256?uo=4" },
+            { name: "Travis Scott", minutes: 297, image: "travis-scott.jpg", appleUrl: "https://music.apple.com/us/artist/travis-scott/549236696?uo=4" }
+          ],
+          songs: [
+            { song: "THIS A MUST", artist: "Kanye West", plays: 19, art: "this-a-must.jpg" },
+            { song: "MAMA'S FAVORITE (feat. Nine Vicious)", artist: "Kanye West", plays: 16, art: "mamas-favorite.jpg" },
+            { song: "Black Beatles (feat. Gucci Mane)", artist: "Rae Sremmurd", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/22/fa/68/22fa68f2-4269-4f9d-5cda-9eca2071f0db/16UMGIM21219.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/black-beatles-feat-gucci-mane/1440842514?i=1440842851&uo=4" },
+            { song: "Sweet Home", artist: "Don Toliver", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/00/c1/dd/00c1dd09-3f86-7288-01dc-63b9f4262f57/075679599377.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/sweet-home/1873328276?i=1873328339&uo=4" },
+            { song: "FATHER", artist: "Kanye West & Travis Scott", plays: 11, art: "father.jpg" },
+            { song: "Bodies", artist: "Offset & JID", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e3/3b/1e/e33b1e58-b6db-c1da-1187-29d62f278be4/25UMGIM92351.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/bodies/1823832484?i=1823832485&uo=4" },
+            { song: "TURNMEUP", artist: "gorn & luvsin", plays: 11, art: "turnmeup.jpg" },
+            { song: "Three", artist: "Future & Young Thug", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/41/8c/62/418c6261-208a-3c24-6a4c-9ca40fc654ae/886446806112.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/three/1298532904?i=1298532908&uo=4" },
+            { song: "Fidelio", artist: "fakemink", plays: 11, art: "fidelio.jpg" },
+            { song: "Rosemary", artist: "Deftones", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/0f/b0/5a/0fb05adc-3847-4e07-3fe7-3cf9eb898e4d/093624946793.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/rosemary/567302377?i=567302386&uo=4" },
+            { song: "Copperhead Road", artist: "Steve Earle", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4b/bf/bd/4bbfbd4c-7f81-48f3-5735-a54bac7d99d9/06UMGIM00910.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/copperhead-road/1440832255?i=1440832545&uo=4" },
+            { song: "Love Sosa", artist: "Chief Keef", plays: 10, art: "love-sosa.jpg", appleUrl: "https://music.apple.com/us/album/love-sosa/1444005836?i=1444005838&uo=4" },
+            { song: "UP (feat. Rich The Kid, A$AP Ferg & SadBoi)", artist: "Denzel Curry", plays: 10, art: "up.jpg" },
+            { song: "Never Gon Lose", artist: "Future", plays: 10, art: "never-gon-lose.jpg" },
+            { song: "Last Dollar (Fly Away)", artist: "Tim McGraw", plays: 9, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/6a/d7/49/6ad7492e-737d-f18c-f0ad-5fff3243d338/715187901827.png/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/last-dollar-fly-away/259754050?i=259754054&uo=4" }
+          ],
+          albums: [
+            { album: "BULLY", artist: "Kanye West", minutes: 70, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/4c/78/0e/4c780ef8-f9cf-62f2-b956-2ceab8b81905/0692788731278_cover.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/bully-ep/1872771948?uo=4" },
+            { album: "So Much Fun (Deluxe)", artist: "Young Thug", minutes: 12, art: "so-much-fun.jpg", appleUrl: "https://music.apple.com/us/album/so-much-fun/1477895569?uo=4" },
+            { album: "56 Nights", artist: "Future", minutes: 7, art: "56-nights.jpg" },
+            { album: "Graduation", artist: "Kanye West", minutes: 6, art: "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/39/25/2d/39252d65-2d50-b991-0962-f7a98a761271/00602517483507.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/graduation/1442845779?uo=4" },
+            { album: "2093 (P2)", artist: "Yeat", minutes: 5, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/b1/69/86/b169862a-cdb8-6a0a-8359-03e86921f306/24UMGIM13668.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/2093/1731057463?uo=4" }
+          ]
+        },
+        "May": {
+          minutes: 5269,
+          artists: [
+            { name: "Drake", minutes: 807, image: "drake.jpg", appleUrl: "https://music.apple.com/us/artist/drake/271256?uo=4" },
+            { name: "Future", minutes: 638, image: "future.jpg", appleUrl: "https://music.apple.com/us/artist/future/128050210?uo=4" },
+            { name: "Kanye West", minutes: 372, image: "kanye-west.jpg", appleUrl: "https://music.apple.com/us/artist/kanye-west/2715720?uo=4" },
+            { name: "Young Thug", minutes: 369, image: "young-thug.jpg", appleUrl: "https://music.apple.com/us/artist/young-thug/81886939?uo=4" },
+            { name: "Travis Scott", minutes: 303, image: "travis-scott.jpg", appleUrl: "https://music.apple.com/us/artist/travis-scott/549236696?uo=4" }
+          ],
+          songs: [
+            { song: "Janice STFU", artist: "Drake", plays: 40, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7f/39/61/7f396123-be56-bc11-eaab-976441808e58/26UMGIM63622.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/janice-stfu/6769649287?i=6769649576&uo=4" },
+            { song: "Highwayman", artist: "Highwaymen", plays: 31, art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/ea/dc/c5/eadcc54d-7e8e-6cff-7af2-dc6452af0bb9/074644005622.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/highwayman/192743964?i=192743989&uo=4" },
+            { song: "Diamonds from Africa", artist: "Future", plays: 17, art: "diamonds-from-africa.jpg" },
+            { song: "The Night Is Still Young", artist: "Nicki Minaj", plays: 17, art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/96/ae/f6/96aef61f-306a-c9f9-e899-98a8b60550b6/14UMGIM59294.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/the-night-is-still-young/1440956379?i=1440956803&uo=4" },
+            { song: "Surf (feat. Gunna)", artist: "Young Thug", plays: 17, art: "surf.jpg", appleUrl: "https://music.apple.com/us/album/surf-feat-gunna/1477895569?i=1477895575&uo=4" },
+            { song: "Three", artist: "Future & Young Thug", plays: 16, art: "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/41/8c/62/418c6261-208a-3c24-6a4c-9ca40fc654ae/886446806112.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/three/1298532904?i=1298532908&uo=4" },
+            { song: "Ran To Atlanta", artist: "Drake, Future & Molly Santana", plays: 14, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7f/39/61/7f396123-be56-bc11-eaab-976441808e58/26UMGIM63622.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/ran-to-atlanta/6769649287?i=6769649577&uo=4" },
+            { song: "Furthest Thing", artist: "Drake", plays: 14, art: "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/5f/30/6d/5f306d67-bff8-2595-9d41-51be895d3208/00602537542321.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/furthest-thing/1440820956?i=1440821266&uo=4" },
+            { song: "Rosemary", artist: "Deftones", plays: 13, art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/0f/b0/5a/0fb05adc-3847-4e07-3fe7-3cf9eb898e4d/093624946793.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/rosemary/567302377?i=567302386&uo=4" },
+            { song: "Super Bass", artist: "Nicki Minaj", plays: 13, art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/3f/6a/dc/3f6adcfb-4d27-303e-b964-3710c56800e3/11UMGIM13385.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/super-bass/1440909639?i=1440910489&uo=4" },
+            { song: "Road Trips", artist: "Drake", plays: 12, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/81/de/93/81de93ef-07f5-7f71-99ed-7ed35e58480a/26UMGIM63623.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/road-trips/6769648970?i=6769649187&uo=4" },
+            { song: "POA", artist: "Future", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music111/v4/e1/fe/9d/e1fe9d22-2a74-cb1d-03c7-d804f471b160/886446376899.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/poa/1205690332?i=1205690477&uo=4" },
+            { song: "PURPLE RAIN (feat. Future)", artist: "Don Toliver", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/44/de/bf/44debf50-b8c0-85b7-0ac9-1f5acfc3e138/075679660763.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/purple-rain-feat-future-metro-boomin/1752793935?i=1752794428&uo=4" },
+            { song: "National Treasures", artist: "Drake", plays: 11, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7f/39/61/7f396123-be56-bc11-eaab-976441808e58/26UMGIM63622.rgb.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/national-treasures/6769649287?i=6769649582&uo=4" },
+            { song: "Brain Damage", artist: "Pink Floyd", plays: 10, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3e/76/b0/3e76b0e3-762b-2286-a019-8afb19cee541/886445635829.jpg/200x200bb.jpg", appleUrl: "https://music.apple.com/us/album/brain-damage/1065973699?i=1065973711&uo=4" }
+          ],
+          albums: [
+            { album: "ICEMAN", artist: "Drake", minutes: 105, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7f/39/61/7f396123-be56-bc11-eaab-976441808e58/26UMGIM63622.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/iceman/6769649287?uo=4" },
+            { album: "So Much Fun (Deluxe)", artist: "Young Thug", minutes: 58, art: "so-much-fun.jpg", appleUrl: "https://music.apple.com/us/album/so-much-fun/1477895569?uo=4" },
+            { album: "MAID OF HONOUR", artist: "Drake", minutes: 20, art: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/81/de/93/81de93ef-07f5-7f71-99ed-7ed35e58480a/26UMGIM63623.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/maid-of-honour/6769648970?uo=4" },
+            { album: "Honestly, Nevermind", artist: "Drake", minutes: 8, art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/6d/31/ab/6d31abaf-7a07-05f1-13ad-72ec520b6bfb/22UMGIM67374.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/honestly-nevermind/1630221591?uo=4" },
+            { album: "HABIBTI", artist: "Drake", minutes: 8, art: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/c4/90/c4/c490c447-65be-b0d5-c4ae-869fc3e21a85/26UMGIM63617.rgb.jpg/400x400bb.jpg", appleUrl: "https://music.apple.com/us/album/habibti/6769647917?uo=4" }
+          ]
         }
       }
+    };
+
+    const months = ["January", "February", "March", "April", "May", "June"];
+    const shortMonths = {
+      January: "Jan", February: "Feb", March: "Mar",
+      April: "Apr", May: "May", June: "Jun"
+    };
+
+    let currentYear = "2026";
+    let currentMonth = "January";
+
+    const monthsEl = document.querySelector("#months");
+    const headlineEl = document.querySelector("#headline");
+    const contentEl = document.querySelector("#content");
+    const yearSelect = document.querySelector("#yearSelect");
+
+    // Build the month tabs
+    months.forEach(function (m) {
+      const tab = document.createElement("button");
+      tab.className = "month-tab";
+      tab.textContent = shortMonths[m];
+      tab.addEventListener("click", function () {
+        currentMonth = m;
+        render();
+      });
+      monthsEl.appendChild(tab);
     });
+
+    yearSelect.addEventListener("change", function () {
+      currentYear = yearSelect.value;
+      render();
+    });
+
+    // --- Streaming service preference (remembered between visits) ---
+    let currentService = "apple";
+    try { currentService = localStorage.getItem("replayService") || "apple"; } catch (e) {}
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function buildServiceUrl(query) {
+      var q = encodeURIComponent(query);
+      if (currentService === "spotify") return "https://open.spotify.com/search/" + q;
+      if (currentService === "youtube") return "https://music.youtube.com/search?q=" + q;
+      if (currentService === "amazon")  return "https://music.amazon.com/search/" + q;
+      return "https://music.apple.com/us/search?term=" + q;
+    }
+
+    const services = document.querySelector("#services");
+    function updateServiceButtons() {
+      document.querySelectorAll(".service-btn").forEach(function (b) {
+        if (b.getAttribute("data-service") === currentService) b.classList.add("active");
+        else b.classList.remove("active");
+      });
+    }
+    services.addEventListener("click", function (e) {
+      var b = e.target.closest(".service-btn");
+      if (!b) return;
+      currentService = b.getAttribute("data-service");
+      try { localStorage.setItem("replayService", currentService); } catch (e2) {}
+      updateServiceButtons();
+    });
+    updateServiceButtons();
+
+    // Clicking any artist / song / album opens it in the chosen service
+    contentEl.addEventListener("click", function (e) {
+      var el = e.target.closest("[data-query]");
+      if (!el) return;
+      var apple = el.getAttribute("data-apple");
+      if (currentService === "apple" && apple) {
+        window.open(apple, "_blank");
+      } else {
+        window.open(buildServiceUrl(el.getAttribute("data-query")), "_blank");
+      }
+    });
+
+    function render() {
+      // Highlight the active month tab
+      const tabs = document.querySelectorAll(".month-tab");
+      tabs.forEach(function (tab, i) {
+        if (months[i] === currentMonth) {
+          tab.classList.add("active");
+        } else {
+          tab.classList.remove("active");
+        }
+      });
+
+      const yearData = replayData[currentYear];
+      const data = yearData ? yearData[currentMonth] : null;
+
+      if (!data) {
+        headlineEl.innerHTML = "";
+        contentEl.innerHTML =
+          '<p class="empty-state">No Replay data for ' + currentMonth + ' ' + currentYear + ' yet.</p>';
+        return;
+      }
+
+      headlineEl.innerHTML =
+        "Jack listened for <strong>" + data.minutes.toLocaleString() +
+        " minutes</strong> in " + currentMonth + ".";
+
+      let html = "";
+
+      html += '<h2 class="section-title">Jack\'s Top Artists</h2>';
+      html += '<div class="artists-row">';
+      data.artists.forEach(function (a, i) {
+        var artistBg = a.image ? '; background-image: url(\'' + a.image + '\')' : '';
+        var artistApple = a.appleUrl ? ' data-apple="' + esc(a.appleUrl) + '"' : '';
+        html +=
+          '<div class="artist-card" data-query="' + esc(a.name) + '"' + artistApple + ' style="--i: ' + i + artistBg + '">' +
+            '<div class="rank-num">' + (i + 1) + '</div>' +
+            '<div>' +
+              '<div class="artist-name">' + a.name + '</div>' +
+              '<div class="artist-min">' + a.minutes + ' minutes</div>' +
+            '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+
+      html += '<h2 class="section-title">Jack\'s Top Songs</h2>';
+      html += '<div class="songs-grid">';
+      data.songs.forEach(function (s, i) {
+        var songThumb = s.art
+          ? '<img class="song-art" src="' + s.art + '" alt="' + s.song + '">'
+          : '<div class="song-art"></div>';
+        var songApple = s.appleUrl ? ' data-apple="' + esc(s.appleUrl) + '"' : '';
+        html +=
+          '<div class="song-row" data-query="' + esc(s.song + " " + s.artist) + '"' + songApple + ' style="--i: ' + i + '">' +
+            '<div class="song-rank">' + (i + 1) + '</div>' +
+            songThumb +
+            '<div class="song-info">' +
+              '<div class="song-title">' + s.song + '</div>' +
+              '<div class="song-sub">' + s.artist + ' · ' + s.plays + ' Plays</div>' +
+            '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+
+      html += '<h2 class="section-title">Jack\'s Top Albums</h2>';
+      html += '<div class="albums-row">';
+      data.albums.forEach(function (al, i) {
+        var albumCover = al.art
+          ? '<img class="album-art" src="' + al.art + '" alt="' + al.album + '">'
+          : '<div class="album-art"></div>';
+        var albumApple = al.appleUrl ? ' data-apple="' + esc(al.appleUrl) + '"' : '';
+        html +=
+          '<div class="album-card" data-query="' + esc(al.album + " " + al.artist) + '"' + albumApple + ' style="--i: ' + i + '">' +
+            albumCover +
+            '<div class="album-name">' + al.album + '</div>' +
+            '<div class="album-sub">' + al.artist + ' · ' + al.minutes + ' minutes</div>' +
+          '</div>';
+      });
+      html += '</div>';
+
+      contentEl.innerHTML = html;
+    }
+
+    const backButton = document.querySelector("#backButton");
+    backButton.addEventListener("click", function () {
+      document.body.classList.add("fade-out");
+      setTimeout(function () {
+        window.location.href = "index.html";
+      }, 350);
+    });
+
+    render();
   </script>
 </body>
 </html>

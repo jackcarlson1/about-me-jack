@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fetch Demo</title>
+</head>
+<body>
+  <h1>Fetch demo — open the Console</h1>
+
+  <script>
+    // ----- Version A: .then() -----
+    fetch("data.json")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        console.log("Version A (.then):", data);
+      });
+
+    // ----- Version B: async / await -----
+    async function loadSongs() {
+      const response = await fetch("data.json");
+      const data = await response.json();
+      console.log("Version B (async/await):", data);
+    }
+    loadSongs();
+  </script>
+</body>
+</html>
