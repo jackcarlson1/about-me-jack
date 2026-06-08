@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Title — Jack Carlson</title>
+
+  <!-- shared site styles (font, nav, fade) -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- styles unique to THIS page go here -->
+  <style>
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- top navigation (add class="active" to the current page's link) -->
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+
+  <!-- ===== page content goes here ===== -->
+  <div class="container">
+    <h1>Page heading</h1>
+    <p>Page content&hellip;</p>
+  </div>
+  <!-- ================================== -->
+
+  <script>
+    // Smooth fade-out when clicking a nav link to another page
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        var here = window.location.pathname.split("/").pop();
+        var href = link.getAttribute("href");
+        if (href === here) return; // already on this page
+        e.preventDefault();
+        document.body.classList.add("fade-out");
+        setTimeout(function () { window.location.href = href; }, 300);
+      });
+    });
+  </script>
+</body>
+</html>

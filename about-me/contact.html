@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Jack Carlson</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+    h1 { font-weight: 700; }
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      margin: 18px 0;
+    }
+    .contact-row a {
+      color: magenta;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .label {
+      font-weight: 700;
+      min-width: 110px;
+    }
+    .soon {
+      color: #999999;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html" class="active">Contact</a>
+  </nav>
+
+  <div class="container">
+    <h1>Contact</h1>
+    <p>The best way to reach me:</p>
+
+    <div class="contact-row">
+      <span class="label">📧 Personal</span>
+      <a href="mailto:jacknewtoncarlson@gmail.com">jacknewtoncarlson@gmail.com</a>
+    </div>
+
+    <div class="contact-row">
+      <span class="label">🎓 School</span>
+      <a href="mailto:j.carlson@allenacademy.org">j.carlson@allenacademy.org</a>
+    </div>
+
+    <!-- When your Instagram is back, replace the "soon" line below with:
+         <a href="https://instagram.com/YOUR_HANDLE" target="_blank" rel="noopener">@YOUR_HANDLE</a> -->
+    <div class="contact-row">
+      <span class="label">📸 Instagram</span>
+      <span class="soon">coming soon</span>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        var href = link.getAttribute("href");
+        if (href === "contact.html") return; // already here
+        e.preventDefault();
+        document.body.classList.add("fade-out");
+        setTimeout(function () { window.location.href = href; }, 300);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* ===========================================================
+   Shared styles — used by index.html, projects.html, contact.html
+   Linked into each page with: <link rel="stylesheet" href="style.css">
+   =========================================================== */
+
+/* Site-wide font (also applied to buttons, which don't inherit it by default) */
+body, button {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Smooth page fade-out used when navigating between pages */
+body {
+  transition: opacity 0.35s ease;
+}
+body.fade-out {
+  opacity: 0;
+}
+
+/* Top navigation bar (same on every page) */
+nav {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  padding: 20px;
+  border-bottom: 1px solid #eeeeee;
+}
+nav a {
+  color: #555555;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+}
+nav a.active {
+  color: magenta;
+}
