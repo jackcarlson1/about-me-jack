@@ -22,9 +22,21 @@ This week I added three buttons to the About Me page using JavaScript:
 - **Clicked N times** — A counter button that starts at "Clicked 0 times" and counts
   up by one with every click.
 
-## Data
+## Data Sources
 
-Song play counts in [`about-me/data.json`](about-me/data.json) come from my personal Apple Music Replay listening history for May 2026.
+- **My listening data** — Song/artist/album stats on the Music Replay page come from
+  my personal Apple Music Replay history (Jan–May 2026), typed in by hand.
+
+- **iTunes Search API** (Apple) — Used to fetch album/artist artwork and exact
+  Apple Music page links for the Replay page.
+  Docs: <https://performance-partners.apple.com/search-api>
+  Artwork and music metadata are © Apple and the respective rights holders. This is a
+  personal, non-commercial project and is not affiliated with or endorsed by Apple.
+
+- **FBI Wanted API** — Powers the live "Most Wanted" page ([`about-me/wanted.html`](about-me/wanted.html)).
+  Docs: <https://www.fbi.gov/wanted/api>
+  Data is provided by the U.S. Federal Bureau of Investigation. This project is not
+  affiliated with, endorsed by, or sponsored by the FBI; all data belongs to the FBI.
 
 ## License
 
