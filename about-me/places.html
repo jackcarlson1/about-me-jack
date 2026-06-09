@@ -125,10 +125,12 @@
       try {
       const results = await Promise.all([
         fetch("data.csv").then(function (r) { return r.text(); }),
-        fetch("states.csv").then(function (r) { return r.text(); })
+        fetch("states.csv").then(function (r) { return r.text(); }),
+        fetch("world.svg").then(function (r) { return r.text(); })
       ]);
       const data = parseCSV(results[0]);     // countries
       const states = parseCSV(results[1]);   // US states
+      document.querySelector("#worldMapWrap").innerHTML = results[2];  // inject world map
 
       // ---- stat cards (computed from the data) ----
       let intlTrips = 0;
@@ -190,6 +192,62 @@
         });
       });
 
+      // ---- world map: color visited countries, US = home (amber), hover counts ----
+      const worldMapWrap = document.querySelector("#worldMapWrap");
+      const worldMap = document.querySelector("#worldMap");
+      const visitsByCountry = {};
+      data.forEach(function (d) { visitsByCountry[d.country] = Number(d.visits); });
+      worldMap.querySelectorAll("path").forEach(function (path) {
+        const name = path.getAttribute("data-name");
+        let label;
+        if (name === "United States") {
+          path.classList.add("home");
+          label = "United States — I live here 🤠";
+        } else if (visitsByCountry[name] !== undefined) {
+          path.classList.add("visited");
+          const v = visitsByCountry[name];
+          label = name + ": " + v + (v === 1 ? " time" : " times");
+        } else {
+          label = name + ": 0 times";
+        }
+        path.addEventListener("mousemove", function (e) {
+          tooltip.style.display = "block";
+          tooltip.style.left = (e.clientX + 12) + "px";
+          tooltip.style.top = (e.clientY + 12) + "px";
+          tooltip.textContent = label;
+        });
+        path.addEventListener("mouseleave", function () {
+          tooltip.style.display = "none";
+        });
+      });
+
+      // zoom the world map to fit a set of countries (by name)
+      function focusOn(names) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        names.forEach(function (nm) {
+          const p = worldMap.querySelector('[data-name="' + nm + '"]');
+          if (!p) { return; }
+          const b = p.getBBox();
+          if (b.x < minX) { minX = b.x; }
+          if (b.y < minY) { minY = b.y; }
+          if (b.x + b.width > maxX) { maxX = b.x + b.width; }
+          if (b.y + b.height > maxY) { maxY = b.y + b.height; }
+        });
+        const padX = (maxX - minX) * 0.18;
+        const padY = (maxY - minY) * 0.18;
+        worldMap.setAttribute("viewBox",
+          (minX - padX) + " " + (minY - padY) + " " +
+          (maxX - minX + 2 * padX) + " " + (maxY - minY + 2 * padY));
+      }
+
+      const europeCountries = data
+        .filter(function (d) { return d.continent === "Europe"; })
+        .map(function (d) { return d.country; });
+      const naCountries = data
+        .filter(function (d) { return d.continent === "North America"; })
+        .map(function (d) { return d.country; })
+        .concat(["United States"]);
+
       const canvas = document.querySelector("#visitsChart");
       let chart = null;
 
@@ -223,24 +281,31 @@
         false
       );
 
+      function hideAll() {
+        chartWrap.style.display = "none";
+        usMapWrap.style.display = "none";
+        worldMapWrap.style.display = "none";
+        homeNote.style.display = "none";
+      }
+
       filterEl.addEventListener("change", function () {
         const choice = filterEl.value;
+        hideAll();
         if (choice === "United States") {
-          // show the fill-in map instead of the bar chart
-          chartWrap.style.display = "none";
           usMapWrap.style.display = "block";
           homeNote.style.display = "block";
+        } else if (choice === "Europe") {
+          worldMapWrap.style.display = "block";
+          focusOn(europeCountries);
+        } else if (choice === "North America") {
+          worldMapWrap.style.display = "block";
+          focusOn(naCountries);
         } else {
-          // show the country bar chart
-          usMapWrap.style.display = "none";
+          // "All" — the country bar chart
           chartWrap.style.display = "block";
-          homeNote.style.display = "none";
-          const rows = (choice === "All")
-            ? data
-            : data.filter(function (d) { return d.continent === choice; });
           showView(
-            rows.map(function (d) { return d.country; }),
-            rows.map(function (d) { return Number(d.visits); }),
+            data.map(function (d) { return d.country; }),
+            data.map(function (d) { return Number(d.visits); }),
             "#ff2e88",
             false
           );
