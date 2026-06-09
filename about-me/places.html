@@ -258,13 +258,23 @@
           (maxX - minX + 2 * padX) + " " + (maxY - minY + 2 * padY));
       }
 
-      const europeCountries = data
-        .filter(function (d) { return d.continent === "Europe"; })
-        .map(function (d) { return d.country; });
-      const naCountries = data
-        .filter(function (d) { return d.continent === "North America"; })
-        .map(function (d) { return d.country; })
-        .concat(["United States"]);
+      // fixed framing per region: "extent" countries define the viewBox; "hide" are removed
+      const EUROPE_EXTENT = ["Portugal", "Norway", "Finland", "Greece", "Turkey"];
+      const EUROPE_HIDE = ["Iceland"];
+      const NA_EXTENT = ["Canada", "Mexico", "Panama"];
+      const NA_HIDE = ["Greenland", "Colombia", "Venezuela", "Guyana", "Suriname",
+                       "Brazil", "Ecuador", "Peru", "Bolivia", "Chile",
+                       "Argentina", "Paraguay", "Uruguay"];
+
+      function setRegion(extent, hide) {
+        // show everything, then hide the excluded countries, then frame the extent
+        worldMap.querySelectorAll("path").forEach(function (p) { p.style.display = ""; });
+        hide.forEach(function (nm) {
+          const p = worldMap.querySelector('[data-name="' + nm + '"]');
+          if (p) { p.style.display = "none"; }
+        });
+        focusOn(extent);
+      }
 
       const canvas = document.querySelector("#visitsChart");
       let chart = null;
@@ -314,10 +324,10 @@
           homeNote.style.display = "block";
         } else if (choice === "Europe") {
           worldMapWrap.style.display = "block";
-          focusOn(europeCountries);
+          setRegion(EUROPE_EXTENT, EUROPE_HIDE);
         } else if (choice === "North America") {
           worldMapWrap.style.display = "block";
-          focusOn(naCountries);
+          setRegion(NA_EXTENT, NA_HIDE);
         } else {
           // "All" — the country bar chart
           chartWrap.style.display = "block";
