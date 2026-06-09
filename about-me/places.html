@@ -54,13 +54,14 @@
       fill: #e8e8e8;
       stroke: #ffffff;
       stroke-width: 1;
-    }
-    #usMap path.visited {
-      fill: #1a56db;
       cursor: pointer;
       transition: fill 0.15s ease;
     }
-    #usMap path.visited:hover { fill: #0b3aa3; }
+    #usMap path:hover { fill: #d4d4d4; }
+    #usMap path.visited { fill: #ff2e88; }
+    #usMap path.visited:hover { fill: #b3005e; }
+    #usMap path.home { fill: #ffb300; }
+    #usMap path.home:hover { fill: #e09e00; }
     #mapTooltip {
       position: fixed;
       display: none;
@@ -162,24 +163,31 @@
       const usMapWrap = document.querySelector("#usMapWrap");
       const tooltip = document.querySelector("#mapTooltip");
 
-      // fill in the states I've visited + show a count on hover
+      // fill visited states, mark Texas as home, and give EVERY state a hover tooltip
       const visitsByName = {};
       states.forEach(function (s) { visitsByName[s.state] = Number(s.visits); });
       usMapWrap.querySelectorAll("path").forEach(function (path) {
         const name = path.getAttribute("data-name");
-        if (visitsByName[name] !== undefined) {
+        let label;
+        if (name === "Texas") {
+          path.classList.add("home");
+          label = "Texas — I live here 🤠";
+        } else if (visitsByName[name] !== undefined) {
           path.classList.add("visited");
           const v = visitsByName[name];
-          path.addEventListener("mousemove", function (e) {
-            tooltip.style.display = "block";
-            tooltip.style.left = (e.clientX + 12) + "px";
-            tooltip.style.top = (e.clientY + 12) + "px";
-            tooltip.textContent = name + ": " + v + (v === 1 ? " time" : " times");
-          });
-          path.addEventListener("mouseleave", function () {
-            tooltip.style.display = "none";
-          });
+          label = name + ": " + v + (v === 1 ? " time" : " times");
+        } else {
+          label = name + ": 0 times";
         }
+        path.addEventListener("mousemove", function (e) {
+          tooltip.style.display = "block";
+          tooltip.style.left = (e.clientX + 12) + "px";
+          tooltip.style.top = (e.clientY + 12) + "px";
+          tooltip.textContent = label;
+        });
+        path.addEventListener("mouseleave", function () {
+          tooltip.style.display = "none";
+        });
       });
 
       const canvas = document.querySelector("#visitsChart");
