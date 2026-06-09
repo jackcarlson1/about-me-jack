@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Places — Jack Carlson</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #1a1a1a; background-color: #ffffff; }
+    .container { max-width: 820px; margin: 0 auto; padding: 32px 24px 60px; }
+    h1 { font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .subtitle { text-align: center; color: #777777; margin: 0 0 28px; }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .stat {
+      flex: 1 1 130px;
+      max-width: 190px;
+      background: linear-gradient(135deg, #ff2e88, #b3005e);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 22px 14px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    .stat .num { font-size: 40px; font-weight: 800; line-height: 1; }
+    .stat .label { font-size: 12px; margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.92; }
+
+    .controls { text-align: center; margin-bottom: 16px; }
+    #viewFilter { font-size: 16px; padding: 6px 10px; border-radius: 8px; }
+
+    #chartWrap { position: relative; height: 360px; }
+
+    #homeNote {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background-color: #fff0f6;
+      border-left: 3px solid magenta;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+    <a href="places.html" class="active">Places</a>
+  </nav>
+
+  <div class="container">
+    <h1>Places I've Been</h1>
+    <p class="subtitle">Everywhere I've traveled</p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="controls">
+      <label for="viewFilter">View: </label>
+      <select id="viewFilter"></select>
+    </div>
+
+    <div id="chartWrap">
+      <canvas id="visitsChart"></canvas>
+    </div>
+
+    <p id="homeNote">🤠 And of course — I live in Texas.</p>
+  </div>
+
+  <script>
+    function parseCSV(text) {
+      const rows = text.trim().split(/\r?\n/);
+      const headers = rows[0].split(",");
+      const out = [];
+      for (let i = 1; i < rows.length; i++) {
+        const values = rows[i].split(",");
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) { obj[headers[j]] = values[j]; }
+        out.push(obj);
+      }
+      return out;
+    }
+
+    async function loadData() {
+      const results = await Promise.all([
+        fetch("data.csv").then(function (r) { return r.text(); }),
+        fetch("states.csv").then(function (r) { return r.text(); })
+      ]);
+      const data = parseCSV(results[0]);     // countries
+      const states = parseCSV(results[1]);   // US states
+
+      // ---- stat cards (computed from the data) ----
+      let intlTrips = 0;
+      data.forEach(function (d) { intlTrips += Number(d.visits); });
+      const continents = new Set(data.map(function (d) { return d.continent; })).size;
+      const stats = [
+        { num: data.length, label: "Countries" },
+        { num: intlTrips, label: "Trips Abroad" },
+        { num: states.length, label: "US States" },
+        { num: continents, label: "Continents" }
+      ];
+      let statsHtml = "";
+      stats.forEach(function (s) {
+        statsHtml += '<div class="stat"><div class="num">' + s.num + '</div><div class="label">' + s.label + '</div></div>';
+      });
+      document.querySelector("#stats").innerHTML = statsHtml;
+
+      // ---- dropdown options ----
+      const filterEl = document.querySelector("#viewFilter");
+      const options = ["All"]
+        .concat(Array.from(new Set(data.map(function (d) { return d.continent; }))))
+        .concat(["United States"]);
+      options.forEach(function (c) {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        filterEl.appendChild(opt);
+      });
+
+      const chartWrap = document.querySelector("#chartWrap");
+      const homeNote = document.querySelector("#homeNote");
+
+      const chart = new Chart(document.querySelector("#visitsChart"), {
+        type: "bar",
+        data: {
+          labels: data.map(function (d) { return d.country; }),
+          datasets: [{
+            label: "Visits",
+            data: data.map(function (d) { return Number(d.visits); }),
+            backgroundColor: "#ff2e88"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
+        }
+      });
+
+      function showView(labels, values, color, horizontal) {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = values;
+        chart.data.datasets[0].backgroundColor = color;
+        chart.options.indexAxis = horizontal ? "y" : "x";
+        chart.update();
+      }
+
+      filterEl.addEventListener("change", function () {
+        const choice = filterEl.value;
+        if (choice === "United States") {
+          const sorted = states.slice().sort(function (a, b) {
+            return Number(b.visits) - Number(a.visits);
+          });
+          showView(
+            sorted.map(function (s) { return s.state; }),
+            sorted.map(function (s) { return Number(s.visits); }),
+            "#1a56db",
+            true
+          );
+          chartWrap.style.height = "760px";
+          homeNote.style.display = "block";
+        } else {
+          const rows = (choice === "All")
+            ? data
+            : data.filter(function (d) { return d.continent === choice; });
+          showView(
+            rows.map(function (d) { return d.country; }),
+            rows.map(function (d) { return Number(d.visits); }),
+            "#ff2e88",
+            false
+          );
+          chartWrap.style.height = "360px";
+          homeNote.style.display = "none";
+        }
+      });
+    }
+
+    loadData();
+
+    // smooth fade-out when navigating away
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        var href = link.getAttribute("href");
+        if (href === "places.html") return;
+        e.preventDefault();
+        document.body.classList.add("fade-out");
+        setTimeout(function () { window.location.href = href; }, 300);
+      });
+    });
+  </script>
+</body>
+</html>
