@@ -90,6 +90,7 @@
     }
 
     async function loadData() {
+      try {
       const results = await Promise.all([
         fetch("data.csv").then(function (r) { return r.text(); }),
         fetch("states.csv").then(function (r) { return r.text(); })
@@ -128,31 +129,38 @@
       const chartWrap = document.querySelector("#chartWrap");
       const homeNote = document.querySelector("#homeNote");
 
-      const chart = new Chart(document.querySelector("#visitsChart"), {
-        type: "bar",
-        data: {
-          labels: data.map(function (d) { return d.country; }),
-          datasets: [{
-            label: "Visits",
-            data: data.map(function (d) { return Number(d.visits); }),
-            backgroundColor: "#ff2e88"
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
-        }
-      });
+      const canvas = document.querySelector("#visitsChart");
+      let chart = null;
 
+      // build (or rebuild) the chart from scratch — reliable for switching orientation
       function showView(labels, values, color, horizontal) {
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
-        chart.data.datasets[0].backgroundColor = color;
-        chart.options.indexAxis = horizontal ? "y" : "x";
-        chart.update();
+        if (chart) { chart.destroy(); }
+        chart = new Chart(canvas, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [{ label: "Visits", data: values, backgroundColor: color }]
+          },
+          options: {
+            indexAxis: horizontal ? "y" : "x",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { beginAtZero: true, ticks: { precision: 0 } },
+              y: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+          }
+        });
       }
+
+      // initial view: all countries (vertical, magenta)
+      showView(
+        data.map(function (d) { return d.country; }),
+        data.map(function (d) { return Number(d.visits); }),
+        "#ff2e88",
+        false
+      );
 
       filterEl.addEventListener("change", function () {
         const choice = filterEl.value;
@@ -182,6 +190,10 @@
           homeNote.style.display = "none";
         }
       });
+      } catch (error) {
+        document.querySelector("#stats").innerHTML =
+          '<p style="color:#b00038;">⚠️ Couldn\'t load the travel data. View this page on the live site or through a local server &mdash; opening the file directly blocks data loading.</p>';
+      }
     }
 
     loadData();
