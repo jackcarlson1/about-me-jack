@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weights — Jack Carlson</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #1a1a1a; background-color: #ffffff; }
+    .container { max-width: 560px; margin: 0 auto; padding: 28px 22px 60px; }
+    h1 { font-weight: 700; text-align: center; margin-bottom: 18px; }
+
+    .cat-tabs { display: flex; gap: 10px; justify-content: center; margin-bottom: 22px; }
+    .cat-tab {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      border: 1px solid #cccccc;
+      background-color: #ffffff;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+    }
+    .cat-tab:active { transform: scale(0.96); }
+    .cat-tab.active { background-color: #ff2e88; color: #ffffff; border-color: #ff2e88; }
+
+    .form { background-color: #faf7f9; border: 1px solid #eee; border-radius: 16px; padding: 18px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
+    .field select, .field input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 15px;
+      border: 1px solid #cccccc;
+      border-radius: 10px;
+    }
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+    .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .check-row input { width: auto; }
+    #stackField { display: none; }
+
+    #logBtn {
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff5a5a, #ff1a5e);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.1s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #logBtn:active { transform: scale(0.97); }
+
+    .hint { font-size: 13px; color: #777777; margin-top: 6px; min-height: 18px; }
+
+    .history { margin-top: 32px; }
+    .history h2 { font-size: 18px; }
+    .log-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .log-entry .main { font-weight: 600; }
+    .log-entry .meta { color: #888888; font-size: 12px; }
+    .log-entry .del { color: #cc0000; cursor: pointer; font-weight: 700; padding-left: 10px; }
+    .empty { color: #999999; text-align: center; margin: 20px 0; }
+    #clearBtn { margin-top: 8px; background: none; border: none; color: #cc0000; cursor: pointer; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+    <a href="places.html">Places</a>
+  </nav>
+
+  <div class="container">
+    <h1>🏋️ Weight Tracker</h1>
+
+    <div class="cat-tabs" id="catTabs">
+      <button class="cat-tab active" data-cat="Push">Push</button>
+      <button class="cat-tab" data-cat="Pull">Pull</button>
+      <button class="cat-tab" data-cat="Legs">Legs</button>
+    </div>
+
+    <div class="form">
+      <div class="field">
+        <label for="exercise">Exercise</label>
+        <select id="exercise"></select>
+        <div class="hint" id="bestHint"></div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="weight">Weight (lbs)</label>
+          <input id="weight" type="number" inputmode="decimal" min="0" placeholder="e.g. 185">
+        </div>
+        <div class="field">
+          <label for="reps">Reps</label>
+          <input id="reps" type="number" inputmode="numeric" min="1" placeholder="e.g. 8">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="intensity">Intensity</label>
+        <select id="intensity">
+          <option>Warm-up</option>
+          <option>Easy</option>
+          <option selected>Moderate</option>
+          <option>Hard</option>
+          <option>To failure</option>
+        </select>
+      </div>
+
+      <div class="check-row">
+        <input id="isMachine" type="checkbox">
+        <label for="isMachine" style="margin:0;font-weight:600;">Pin-stack machine</label>
+      </div>
+      <div class="field" id="stackField">
+        <label for="stackMax">Max weight on the stack (lbs)</label>
+        <input id="stackMax" type="number" inputmode="decimal" min="0" placeholder="e.g. 250">
+      </div>
+
+      <button id="logBtn">Log set</button>
+    </div>
+
+    <div class="history">
+      <h2>History</h2>
+      <div id="log"></div>
+      <button id="clearBtn">Clear all history</button>
+    </div>
+  </div>
+
+  <script>
+    var EXERCISES = {
+      Push: [
+        "Hammer Strength iso-lateral shoulder press (plate-loaded)",
+        "Machine chest press",
+        "EZ-bar cable tricep pushdown",
+        "Rope cable tricep pushdown",
+        "EZ-bar cable tricep extension (overhead, long head)",
+        "Seated machine lateral raise",
+        "One-arm cable lateral raise",
+        "Dumbbell lateral raise",
+        "One-hand cable wrist flexor curl (inner forearm)",
+        "Smith machine bench press",
+        "Smith machine incline bench press",
+        "Dumbbell bench press",
+        "Incline dumbbell bench press",
+        "Barbell bench press",
+        "Pec deck machine flye"
+      ],
+      Pull: [
+        "Barbell deadlift",
+        "Cable lat pulldown",
+        "Cable lat pullover",
+        "EZ-bar cable bicep curl",
+        "Cable bicep curl (independent arms)",
+        "Dumbbell hammer curl",
+        "Rope cable hammer curl",
+        "T-bar row",
+        "Cable close-grip mid-back row",
+        "Plate-loaded lower-back row (machine)",
+        "Plate-loaded mid-back row (machine)",
+        "Weighted back extension (holding plate)"
+      ],
+      Legs: [
+        "Abductor / adductor machine",
+        "Power cleans (free weight)",
+        "Smith machine squat",
+        "Plate-loaded hack squat",
+        "Barbell back squat (free weight)",
+        "Machine leg press",
+        "Plate-loaded leg press (machine)",
+        "Lying hamstring curl (machine)",
+        "Seated hamstring curl (machine)",
+        "Smith machine Bulgarian split squat",
+        "Seated leg extension (machine)",
+        "Standing calf raise (machine)"
+      ]
+    };
+
+    var catTabs = document.querySelector("#catTabs");
+    var exerciseSel = document.querySelector("#exercise");
+    var weightIn = document.querySelector("#weight");
+    var repsIn = document.querySelector("#reps");
+    var intensitySel = document.querySelector("#intensity");
+    var isMachine = document.querySelector("#isMachine");
+    var stackField = document.querySelector("#stackField");
+    var stackMaxIn = document.querySelector("#stackMax");
+    var bestHint = document.querySelector("#bestHint");
+    var logEl = document.querySelector("#log");
+
+    var currentCat = "Push";
+
+    // ---- load/save the log from localStorage ----
+    function loadLog() {
+      try { return JSON.parse(localStorage.getItem("liftLog")) || []; }
+      catch (e) { return []; }
+    }
+    function saveLog(log) {
+      try { localStorage.setItem("liftLog", JSON.stringify(log)); } catch (e) {}
+    }
+    var log = loadLog();
+
+    // estimated 1-rep max (Epley) — a single strength number from weight x reps
+    function e1rm(weight, reps) {
+      return Math.round(weight * (1 + reps / 30));
+    }
+
+    function fillExercises() {
+      exerciseSel.innerHTML = "";
+      EXERCISES[currentCat].forEach(function (name) {
+        var opt = document.createElement("option");
+        opt.value = name; opt.textContent = name;
+        exerciseSel.appendChild(opt);
+      });
+      showBest();
+    }
+
+    // show your best previous set for the chosen exercise (progressive-overload nudge)
+    function showBest() {
+      var name = exerciseSel.value;
+      var prior = log.filter(function (e) { return e.exercise === name; });
+      if (prior.length === 0) { bestHint.textContent = "No history yet — set your first benchmark!"; return; }
+      var best = prior.reduce(function (a, b) { return e1rm(b.weight, b.reps) > e1rm(a.weight, a.reps) ? b : a; });
+      bestHint.textContent = "Best so far: " + best.weight + " lbs x " + best.reps +
+        " (est. 1RM " + e1rm(best.weight, best.reps) + ") — beat it!";
+    }
+
+    function renderLog() {
+      if (log.length === 0) { logEl.innerHTML = '<p class="empty">No sets logged yet.</p>'; return; }
+      var html = "";
+      // newest first
+      for (var i = log.length - 1; i >= 0; i--) {
+        var e = log[i];
+        var stack = (e.stackMax != null) ? (" · stack max " + e.stackMax + " lbs") : "";
+        html +=
+          '<div class="log-entry">' +
+            '<div>' +
+              '<div class="main">' + e.exercise + '</div>' +
+              '<div class="meta">' + e.weight + ' lbs x ' + e.reps + ' · ' + e.intensity +
+                ' · ' + e.category + stack + ' · ' + e.date + '</div>' +
+            '</div>' +
+            '<span class="del" data-id="' + e.id + '">&times;</span>' +
+          '</div>';
+      }
+      logEl.innerHTML = html;
+    }
+
+    // ---- events ----
+    catTabs.addEventListener("click", function (ev) {
+      var btn = ev.target.closest(".cat-tab");
+      if (!btn) return;
+      currentCat = btn.getAttribute("data-cat");
+      document.querySelectorAll(".cat-tab").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      fillExercises();
+    });
+
+    exerciseSel.addEventListener("change", showBest);
+
+    isMachine.addEventListener("change", function () {
+      stackField.style.display = isMachine.checked ? "block" : "none";
+    });
+
+    document.querySelector("#logBtn").addEventListener("click", function () {
+      var weight = parseFloat(weightIn.value);
+      var reps = parseInt(repsIn.value, 10);
+      if (isNaN(weight) || isNaN(reps) || reps < 1) {
+        alert("Enter a weight and reps first.");
+        return;
+      }
+      var entry = {
+        id: Date.now(),
+        category: currentCat,
+        exercise: exerciseSel.value,
+        weight: weight,
+        reps: reps,
+        intensity: intensitySel.value,
+        stackMax: (isMachine.checked && stackMaxIn.value) ? parseFloat(stackMaxIn.value) : null,
+        date: new Date().toLocaleDateString()
+      };
+      log.push(entry);
+      saveLog(log);
+      renderLog();
+      showBest();
+      weightIn.value = ""; repsIn.value = "";
+    });
+
+    logEl.addEventListener("click", function (ev) {
+      var del = ev.target.closest(".del");
+      if (!del) return;
+      var id = Number(del.getAttribute("data-id"));
+      log = log.filter(function (e) { return e.id !== id; });
+      saveLog(log);
+      renderLog();
+      showBest();
+    });
+
+    document.querySelector("#clearBtn").addEventListener("click", function () {
+      if (confirm("Delete all logged sets?")) {
+        log = [];
+        saveLog(log);
+        renderLog();
+        showBest();
+      }
+    });
+
+    // ---- init ----
+    fillExercises();
+    renderLog();
+
+    // smooth fade-out when navigating away
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        document.body.classList.add("fade-out");
+        setTimeout(function () { window.location.href = link.getAttribute("href"); }, 300);
+      });
+    });
+  </script>
+</body>
+</html>

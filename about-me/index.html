@@ -391,6 +391,7 @@
     <button id="colorButton">🎨 Change color</button>
     <button id="chartButton">🎵 Music replay</button>
     <button id="wantedButton">🚨 Most Wanted</button>
+    <button id="weightsButton">🏋️ Weights</button>
   </div>
 </div>
 
@@ -669,6 +670,11 @@
   const wantedButton = document.querySelector("#wantedButton");
   wantedButton.addEventListener("click", function () {
     window.location.href = "wanted.html";
+  });
+
+  const weightsButton = document.querySelector("#weightsButton");
+  weightsButton.addEventListener("click", function () {
+    window.location.href = "weights.html";
   });
 
   const gavinWrap = document.querySelector("#gavinWrap");
