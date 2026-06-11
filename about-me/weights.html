@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Weights">
+  <meta name="theme-color" content="#ff2e88">
   <title>Weights — Jack Carlson</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -41,6 +44,43 @@
     .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
     .check-row input { width: auto; }
     #stackField { display: none; }
+
+    .ex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 8px;
+    }
+    .ex-tile {
+      border: 2px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 8px 6px;
+      background-color: #ffffff;
+      cursor: pointer;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.12s ease, transform 0.08s ease;
+    }
+    .ex-tile:active { transform: scale(0.96); }
+    .ex-tile.selected {
+      border-color: #ff2e88;
+      box-shadow: 0 0 0 2px rgba(255, 46, 136, 0.2);
+    }
+    .ex-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      background-color: #f3f3f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      overflow: hidden;
+    }
+    .ex-thumb img { width: 100%; height: 100%; object-fit: contain; }
+    .ex-label { font-size: 11px; line-height: 1.2; color: #333333; }
 
     #logBtn {
       width: 100%;
@@ -96,8 +136,8 @@
 
     <div class="form">
       <div class="field">
-        <label for="exercise">Exercise</label>
-        <select id="exercise"></select>
+        <label>Exercise</label>
+        <div class="ex-grid" id="exerciseGrid"></div>
         <div class="hint" id="bestHint"></div>
       </div>
 
@@ -192,7 +232,11 @@
     };
 
     var catTabs = document.querySelector("#catTabs");
-    var exerciseSel = document.querySelector("#exercise");
+    var exerciseGrid = document.querySelector("#exerciseGrid");
+    var currentExercise = null;
+    function slug(name) {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
     var weightIn = document.querySelector("#weight");
     var repsIn = document.querySelector("#reps");
     var intensitySel = document.querySelector("#intensity");
@@ -220,18 +264,45 @@
     }
 
     function fillExercises() {
-      exerciseSel.innerHTML = "";
-      EXERCISES[currentCat].forEach(function (name) {
-        var opt = document.createElement("option");
-        opt.value = name; opt.textContent = name;
-        exerciseSel.appendChild(opt);
+      exerciseGrid.innerHTML = "";
+      EXERCISES[currentCat].forEach(function (name, idx) {
+        var tile = document.createElement("div");
+        tile.className = "ex-tile";
+
+        var thumb = document.createElement("div");
+        thumb.className = "ex-thumb";
+        var img = document.createElement("img");
+        img.src = "weights-img/" + slug(name) + ".png";  // drop real images here later
+        img.alt = name;
+        img.onerror = function () { thumb.textContent = "🏋️"; };  // uniform placeholder
+        thumb.appendChild(img);
+
+        var label = document.createElement("div");
+        label.className = "ex-label";
+        label.textContent = name;
+
+        tile.appendChild(thumb);
+        tile.appendChild(label);
+        tile.addEventListener("click", function () {
+          currentExercise = name;
+          document.querySelectorAll(".ex-tile").forEach(function (t) { t.classList.remove("selected"); });
+          tile.classList.add("selected");
+          showBest();
+        });
+        exerciseGrid.appendChild(tile);
+
+        if (idx === 0) {
+          currentExercise = name;
+          tile.classList.add("selected");
+        }
       });
       showBest();
     }
 
     // show your best previous set for the chosen exercise (progressive-overload nudge)
     function showBest() {
-      var name = exerciseSel.value;
+      var name = currentExercise;
+      if (!name) { bestHint.textContent = ""; return; }
       var prior = log.filter(function (e) { return e.exercise === name; });
       if (prior.length === 0) { bestHint.textContent = "No history yet — set your first benchmark!"; return; }
       var best = prior.reduce(function (a, b) { return e1rm(b.weight, b.reps) > e1rm(a.weight, a.reps) ? b : a; });
@@ -269,8 +340,6 @@
       fillExercises();
     });
 
-    exerciseSel.addEventListener("change", showBest);
-
     isMachine.addEventListener("change", function () {
       stackField.style.display = isMachine.checked ? "block" : "none";
     });
@@ -285,7 +354,7 @@
       var entry = {
         id: Date.now(),
         category: currentCat,
-        exercise: exerciseSel.value,
+        exercise: currentExercise,
         weight: weight,
         reps: reps,
         intensity: intensitySel.value,
