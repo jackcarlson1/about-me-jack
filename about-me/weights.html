@@ -72,7 +72,7 @@
       width: 100%;
       aspect-ratio: 1 / 1;
       border-radius: 8px;
-      background-color: #f3f3f5;
+      background-color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -185,21 +185,21 @@
   <script>
     var EXERCISES = {
       Push: [
-        "Hammer Strength iso-lateral shoulder press (plate-loaded)",
+        "Plate loaded shoulder press",
         "Machine chest press",
         "EZ-bar cable tricep pushdown",
         "Rope cable tricep pushdown",
-        "EZ-bar cable tricep extension (overhead, long head)",
+        "Overhead cable tricep extension",
         "Seated machine lateral raise",
         "One-arm cable lateral raise",
         "Dumbbell lateral raise",
-        "One-hand cable wrist flexor curl (inner forearm)",
-        "Smith machine bench press",
-        "Smith machine incline bench press",
+        "One-hand cable wrist flexor curl",
+        "Smith machine press",
+        "Smith machine incline press",
         "Dumbbell bench press",
         "Incline dumbbell bench press",
         "Barbell bench press",
-        "Pec deck machine flye"
+        "Pec deck machine fly"
       ],
       Pull: [
         "Barbell deadlift",
@@ -272,7 +272,7 @@
         var thumb = document.createElement("div");
         thumb.className = "ex-thumb";
         var img = document.createElement("img");
-        img.src = "weights-img/" + slug(name) + ".png";  // drop real images here later
+        img.src = "weights-img/" + slug(name) + ".jpg";  // drop real images here later
         img.alt = name;
         img.onerror = function () { thumb.textContent = "🏋️"; };  // uniform placeholder
         thumb.appendChild(img);

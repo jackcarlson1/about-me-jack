@@ -1,0 +1,47 @@
+
+## Push
+  weights-img/hammer-strength-iso-lateral-shoulder-press-plate-loaded.png   <- Hammer Strength iso-lateral shoulder press (plate-loaded)
+  weights-img/machine-chest-press.png   <- Machine chest press
+  weights-img/ez-bar-cable-tricep-pushdown.png   <- EZ-bar cable tricep pushdown
+  weights-img/rope-cable-tricep-pushdown.png   <- Rope cable tricep pushdown
+  weights-img/ez-bar-cable-tricep-extension-overhead-long-head.png   <- EZ-bar cable tricep extension (overhead, long head)
+  weights-img/seated-machine-lateral-raise.png   <- Seated machine lateral raise
+  weights-img/one-arm-cable-lateral-raise.png   <- One-arm cable lateral raise
+  weights-img/dumbbell-lateral-raise.png   <- Dumbbell lateral raise
+  weights-img/one-hand-cable-wrist-flexor-curl-inner-forearm.png   <- One-hand cable wrist flexor curl (inner forearm)
+  weights-img/smith-machine-bench-press.png   <- Smith machine bench press
+  weights-img/smith-machine-incline-bench-press.png   <- Smith machine incline bench press
+  weights-img/dumbbell-bench-press.png   <- Dumbbell bench press
+  weights-img/incline-dumbbell-bench-press.png   <- Incline dumbbell bench press
+  weights-img/barbell-bench-press.png   <- Barbell bench press
+  weights-img/pec-deck-machine-flye.png   <- Pec deck machine flye
+
+## Pull
+  weights-img/barbell-deadlift.png   <- Barbell deadlift
+  weights-img/cable-lat-pulldown.png   <- Cable lat pulldown
+  weights-img/cable-lat-pullover.png   <- Cable lat pullover
+  weights-img/ez-bar-cable-bicep-curl.png   <- EZ-bar cable bicep curl
+  weights-img/cable-bicep-curl-independent-arms.png   <- Cable bicep curl (independent arms)
+  weights-img/dumbbell-hammer-curl.png   <- Dumbbell hammer curl
+  weights-img/rope-cable-hammer-curl.png   <- Rope cable hammer curl
+  weights-img/t-bar-row.png   <- T-bar row
+  weights-img/cable-close-grip-mid-back-row.png   <- Cable close-grip mid-back row
+  weights-img/plate-loaded-lower-back-row-machine.png   <- Plate-loaded lower-back row (machine)
+  weights-img/plate-loaded-mid-back-row-machine.png   <- Plate-loaded mid-back row (machine)
+  weights-img/weighted-back-extension-holding-plate.png   <- Weighted back extension (holding plate)
+
+## Legs
+  weights-img/abductor-adductor-machine.png   <- Abductor / adductor machine
+  weights-img/power-cleans-free-weight.png   <- Power cleans (free weight)
+  weights-img/smith-machine-squat.png   <- Smith machine squat
+  weights-img/plate-loaded-hack-squat.png   <- Plate-loaded hack squat
+  weights-img/barbell-back-squat-free-weight.png   <- Barbell back squat (free weight)
+  weights-img/machine-leg-press.png   <- Machine leg press
+  weights-img/plate-loaded-leg-press-machine.png   <- Plate-loaded leg press (machine)
+  weights-img/lying-hamstring-curl-machine.png   <- Lying hamstring curl (machine)
+  weights-img/seated-hamstring-curl-machine.png   <- Seated hamstring curl (machine)
+  weights-img/smith-machine-bulgarian-split-squat.png   <- Smith machine Bulgarian split squat
+  weights-img/seated-leg-extension-machine.png   <- Seated leg extension (machine)
+  weights-img/standing-calf-raise-machine.png   <- Standing calf raise (machine)
+
+TOTAL: 39
