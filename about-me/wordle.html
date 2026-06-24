@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Wordle">
+  <meta name="theme-color" content="#ff2e88">
+  <title>Wordle — Jack Carlson</title>
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+  <script defer src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: var(--bg); }
+    .container { max-width: 680px; margin: 0 auto; padding: 14px 14px 70px; }
+    h1 { text-align: center; font-weight: 800; margin: 6px 0 2px; }
+    .sub { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 16px; }
+
+    .controls { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px var(--shadow); }
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    .slider-row label { font-weight: 700; font-size: 14px; white-space: nowrap; }
+    .len-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 800; }
+    input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 8px; border-radius: 999px; background: var(--surface-3); outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--surface); box-shadow: 0 2px 6px var(--shadow-md); }
+    input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--surface); }
+    .refresh-btn { width: 100%; margin-top: 12px; padding: 12px; font-size: 15px; font-weight: 800; color: #fff; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg, #ff5a8a, #ff1a5e); }
+    .refresh-btn:active { transform: scale(0.98); }
+
+    .status { text-align: center; min-height: 24px; font-weight: 700; margin: 6px 0 10px; }
+    .status .msg { color: var(--accent-text); }
+    .status .info { color: var(--text-muted); font-weight: 600; font-size: 13px; }
+
+    .board { display: grid; gap: 5px; margin: 0 auto 16px; width: min(100%, calc(var(--len, 5) * 58px)); }
+    .row { display: grid; grid-template-columns: repeat(var(--len, 5), 1fr); gap: 5px; }
+    .row.shake { animation: shake 0.4s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+    .tile { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-weight: 800; text-transform: uppercase;
+      font-size: clamp(15px, 6.5vw, 30px); border: 2px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); user-select: none; }
+    .tile.filled { border-color: var(--text-muted); animation: pop 0.12s ease; }
+    @keyframes pop { 0%{transform:scale(0.9)} 100%{transform:scale(1)} }
+    .tile.correct { background: #6aaa64; border-color: #6aaa64; color: #fff; }
+    .tile.present { background: #c9b458; border-color: #c9b458; color: #fff; }
+    .tile.absent  { background: #787c7e; border-color: #787c7e; color: #fff; }
+    :root[data-theme="dark"] .tile.absent { background: #3a3f4b; border-color: #3a3f4b; }
+
+    .keyboard { display: flex; flex-direction: column; gap: 6px; max-width: 520px; margin: 0 auto; }
+    .krow { display: flex; gap: 5px; justify-content: center; }
+    .key { flex: 1; min-width: 0; height: 52px; border: none; border-radius: 8px; background: var(--surface-3); color: var(--text);
+      font-weight: 700; font-size: 14px; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .key:active { transform: scale(0.94); }
+    .key.wide { flex: 1.6; font-size: 12px; }
+    .key.correct { background: #6aaa64; color: #fff; }
+    .key.present { background: #c9b458; color: #fff; }
+    .key.absent  { background: #787c7e; color: #fff; }
+    :root[data-theme="dark"] .key.absent { background: #2c313c; color: #8a90a0; }
+
+    .best { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-top: 18px; box-shadow: 0 1px 3px var(--shadow); }
+    .best h2 { font-size: 16px; margin: 0 0 10px; }
+    .best-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .best-cell { border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 4px; text-align: center; }
+    .best-cell.cur { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,46,136,0.18); }
+    .best-cell .bl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .best-cell .bv { font-size: 20px; font-weight: 800; color: var(--accent-text); }
+    .best-cell .bv.none { color: var(--text-faint); }
+    .hint { text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+    <a href="places.html">Places</a>
+  </nav>
+
+  <div class="container">
+    <h1>🟩 Wordle</h1>
+    <p class="sub">Guess the word. Green = right spot, yellow = wrong spot, gray = not in the word.</p>
+
+    <div class="controls">
+      <div class="slider-row">
+        <label for="lenSlider">Word length</label>
+        <input type="range" id="lenSlider" min="3" max="10" step="1" value="5">
+        <span class="len-badge" id="lenBadge">5</span>
+      </div>
+      <button class="refresh-btn" id="refreshBtn">🔄 New 5-letter word</button>
+    </div>
+
+    <div class="status"><span id="statusMsg"></span><div class="info" id="statusInfo"></div></div>
+
+    <div class="board" id="board"></div>
+    <div class="keyboard" id="keyboard"></div>
+
+    <div class="best">
+      <h2>🏆 Best scores (fewest guesses)</h2>
+      <div class="best-grid" id="bestGrid"></div>
+    </div>
+    <p class="hint">Your game is saved automatically — close the tab and come back anytime. It only changes when you hit “New word.”</p>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var WORDS = {"3": ["ant", "arm", "bag", "bat", "bed", "bee", "big", "box", "bus", "car", "cat", "cow", "cup", "cut", "day", "dog", "ear", "egg", "eye", "fan", "fox", "fun", "ham", "hat", "hop", "hot", "ice", "jam", "jog", "joy", "key", "leg", "log", "man", "map", "mix", "mud", "net", "new", "nut", "oak", "oil", "old", "owl", "pen", "pig", "pot", "rat", "raw", "red", "rug", "run", "saw", "sea", "sit", "six", "sky", "sun", "tap", "tea", "ten", "top", "toy", "van", "wax", "way", "win", "zip"], "4": ["ball", "bear", "bell", "bird", "blue", "book", "cake", "corn", "door", "duck", "fire", "fish", "foot", "frog", "game", "gift", "goat", "gold", "hand", "hope", "jump", "kite", "lamp", "leaf", "lion", "love", "milk", "moon", "nest", "play", "pond", "rain", "ring", "road", "rock", "rose", "sand", "seed", "ship", "sing", "snow", "sock", "song", "star", "tall", "time", "tree", "warm", "wave", "wind", "wing", "wolf", "word", "yarn", "year", "zero"], "5": ["apple", "beach", "bloom", "bread", "cabin", "candy", "chair", "cloud", "dance", "dream", "eagle", "earth", "flame", "ghost", "grape", "green", "happy", "heart", "house", "juice", "lemon", "money", "mouse", "music", "night", "ocean", "paint", "piano", "plant", "queen", "river", "robot", "smile", "snake", "space", "stone", "storm", "sugar", "sword", "table", "tiger", "train", "water", "wheel", "world", "zebra"], "6": ["animal", "banana", "basket", "bottle", "bridge", "butter", "camera", "candle", "cheese", "church", "circle", "cookie", "dragon", "flower", "forest", "garden", "ground", "guitar", "hammer", "island", "jungle", "kitten", "ladder", "market", "monkey", "mother", "orange", "palace", "pencil", "pepper", "planet", "pocket", "rabbit", "rocket", "school", "silver", "spider", "summer", "sunset", "turtle", "window", "winter", "wizard", "yellow"], "7": ["amazing", "balloon", "bicycle", "blanket", "brother", "captain", "ceiling", "chicken", "control", "cushion", "diamond", "dolphin", "evening", "factory", "feather", "freedom", "gateway", "gravity", "holiday", "journey", "kitchen", "library", "machine", "measure", "morning", "network", "october", "picture", "popcorn", "printer", "rainbow", "station", "teacher", "thunder", "uniform", "village", "weather", "welcome"], "8": ["airplane", "backpack", "baseball", "birthday", "building", "campfire", "computer", "daughter", "dinosaur", "doorbell", "elephant", "envelope", "flamingo", "football", "hospital", "language", "lemonade", "mountain", "mushroom", "notebook", "sandwich", "scissors", "shoulder", "sidewalk", "starfish", "sunshine", "triangle", "umbrella", "vacation"], "9": ["adventure", "astronaut", "beautiful", "beginning", "breakfast", "butterfly", "carpenter", "chemistry", "chocolate", "community", "crocodile", "dangerous", "detective", "different", "dinosaurs", "education", "fireworks", "furniture", "happiness", "invention", "knowledge", "orchestra", "telephone", "vegetable", "waterfall", "wonderful", "xylophone"], "10": ["automobile", "background", "basketball", "binoculars", "blackboard", "creativity", "dictionary", "everything", "experiment", "friendship", "generation", "helicopter", "laboratory", "motorcycle", "playground", "strawberry", "technology", "understand", "watermelon", "wilderness"]};
+
+    var KEYS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+
+    // ---------- state + persistence ----------
+    var state = load();
+    var best = loadBest();
+
+    function load() {
+      try {
+        var s = JSON.parse(localStorage.getItem("wordleState"));
+        if (s && s.answer && s.answer.length >= 3 && s.answer.length <= 10 && Array.isArray(s.rows)) {
+          s.len = s.answer.length;
+          if (typeof s.current !== "string") s.current = "";
+          if (s.status !== "win" && s.status !== "lose") s.status = "play";
+          return s;
+        }
+      } catch (e) {}
+      return null;
+    }
+    function save() { try { localStorage.setItem("wordleState", JSON.stringify(state)); } catch (e) {} }
+    function loadBest() { try { return JSON.parse(localStorage.getItem("wordleBest")) || {}; } catch (e) { return {}; } }
+    function saveBest() { try { localStorage.setItem("wordleBest", JSON.stringify(best)); } catch (e) {} }
+
+    function maxGuesses(len) { return Math.min(len + 1, 8); }
+    function pick(len) { var arr = WORDS[len]; return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function newGame(len) {
+      state = { len: len, answer: pick(len), rows: [], current: "", status: "play" };
+      save(); render();
+    }
+
+    // ---------- scoring (handles duplicate letters like real Wordle) ----------
+    function scoreGuess(guess, answer) {
+      var n = guess.length, res = [], counts = {}, i;
+      for (i = 0; i < n; i++) res.push("absent");
+      for (i = 0; i < n; i++) counts[answer[i]] = (counts[answer[i]] || 0) + 1;
+      for (i = 0; i < n; i++) { if (guess[i] === answer[i]) { res[i] = "correct"; counts[guess[i]]--; } }
+      for (i = 0; i < n; i++) { if (res[i] !== "correct") { var c = guess[i]; if (counts[c] > 0) { res[i] = "present"; counts[c]--; } } }
+      return res;
+    }
+
+    function keyStates() {
+      var ks = {}, rank = { absent: 1, present: 2, correct: 3 };
+      state.rows.forEach(function (g) {
+        var res = scoreGuess(g, state.answer);
+        for (var i = 0; i < g.length; i++) {
+          var c = g[i], cur = ks[c];
+          if (!cur || rank[res[i]] > rank[cur]) ks[c] = res[i];
+        }
+      });
+      return ks;
+    }
+
+    // ---------- render ----------
+    var boardEl = document.getElementById("board");
+    var kbEl = document.getElementById("keyboard");
+    var statusMsg = document.getElementById("statusMsg");
+    var statusInfo = document.getElementById("statusInfo");
+
+    function render() {
+      var len = state.len, mg = maxGuesses(len);
+      boardEl.style.setProperty("--len", len);
+      boardEl.innerHTML = "";
+      for (var r = 0; r < mg; r++) {
+        var row = document.createElement("div");
+        row.className = "row"; row.style.setProperty("--len", len);
+        var guess = state.rows[r];
+        var res = guess ? scoreGuess(guess, state.answer) : null;
+        var isCurrent = (r === state.rows.length && state.status === "play");
+        for (var c = 0; c < len; c++) {
+          var tile = document.createElement("div");
+          tile.className = "tile";
+          if (guess) { tile.textContent = guess[c]; tile.classList.add(res[c]); }
+          else if (isCurrent && c < state.current.length) { tile.textContent = state.current[c]; tile.classList.add("filled"); }
+          row.appendChild(tile);
+        }
+        boardEl.appendChild(row);
+      }
+      renderKeyboard();
+      renderStatus();
+      renderBest();
+    }
+
+    function renderKeyboard() {
+      var ks = keyStates();
+      kbEl.innerHTML = "";
+      KEYS.forEach(function (rowStr, idx) {
+        var row = document.createElement("div"); row.className = "krow";
+        if (idx === 2) row.appendChild(makeKey("enter", "Enter", true));
+        rowStr.split("").forEach(function (ch) {
+          var k = makeKey(ch, ch, false);
+          if (ks[ch]) k.classList.add(ks[ch]);
+          row.appendChild(k);
+        });
+        if (idx === 2) row.appendChild(makeKey("back", "⌫", true));
+        kbEl.appendChild(row);
+      });
+    }
+    function makeKey(key, label, wide) {
+      var b = document.createElement("button");
+      b.className = "key" + (wide ? " wide" : "");
+      b.textContent = label;
+      b.addEventListener("click", function () { handleKey(key); });
+      return b;
+    }
+
+    function renderStatus() {
+      var mg = maxGuesses(state.len);
+      if (state.status === "win") statusMsg.innerHTML = '<span class="msg">🎉 Solved in ' + state.rows.length + (state.rows.length === 1 ? " guess!" : " guesses!") + "</span>";
+      else if (state.status === "lose") statusMsg.innerHTML = '<span class="msg">The word was ' + state.answer.toUpperCase() + " — hit New word.</span>";
+      else statusMsg.textContent = "";
+      statusInfo.textContent = state.len + " letters · guess " + Math.min(state.rows.length + (state.status === "play" ? 1 : 0), mg) + " of " + mg;
+    }
+
+    function renderBest() {
+      var grid = document.getElementById("bestGrid"); grid.innerHTML = "";
+      for (var L = 3; L <= 10; L++) {
+        var cell = document.createElement("div");
+        cell.className = "best-cell" + (L === state.len ? " cur" : "");
+        var v = best[L];
+        cell.innerHTML = '<div class="bl">' + L + ' letters</div><div class="bv ' + (v ? "" : "none") + '">' + (v ? v : "—") + '</div>';
+        grid.appendChild(cell);
+      }
+    }
+
+    var msgTimer = null;
+    function flash(text) {
+      statusMsg.innerHTML = '<span class="msg">' + text + "</span>";
+      if (msgTimer) clearTimeout(msgTimer);
+      msgTimer = setTimeout(renderStatus, 1200);
+    }
+    function shakeCurrentRow() {
+      var rows = boardEl.querySelectorAll(".row");
+      var el = rows[state.rows.length];
+      if (el) { el.classList.add("shake"); setTimeout(function () { el.classList.remove("shake"); }, 400); }
+    }
+
+    // ---------- input ----------
+    function handleKey(key) {
+      if (state.status !== "play") return;
+      if (key === "enter") return submit();
+      if (key === "back") { if (state.current.length) { state.current = state.current.slice(0, -1); save(); render(); } return; }
+      if (/^[a-z]$/.test(key) && state.current.length < state.len) { state.current += key; save(); render(); }
+    }
+    function submit() {
+      if (state.current.length < state.len) { flash("Not enough letters"); shakeCurrentRow(); return; }
+      var guess = state.current;
+      state.rows.push(guess);
+      state.current = "";
+      if (guess === state.answer) {
+        state.status = "win";
+        var g = state.rows.length;
+        if (!best[state.len] || g < best[state.len]) { best[state.len] = g; saveBest(); }
+      } else if (state.rows.length >= maxGuesses(state.len)) {
+        state.status = "lose";
+      }
+      save(); render();
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "Enter") handleKey("enter");
+      else if (e.key === "Backspace") handleKey("back");
+      else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());
+    });
+
+    // ---------- slider + refresh ----------
+    var slider = document.getElementById("lenSlider");
+    var badge = document.getElementById("lenBadge");
+    var refreshBtn = document.getElementById("refreshBtn");
+    function syncSliderUI() {
+      badge.textContent = slider.value;
+      refreshBtn.textContent = "🔄 New " + slider.value + "-letter word";
+    }
+    slider.addEventListener("input", syncSliderUI);
+    refreshBtn.addEventListener("click", function () { newGame(parseInt(slider.value, 10)); });
+
+    // ---------- boot ----------
+    if (!state) state = { len: 5, answer: pick(5), rows: [], current: "", status: "play" };
+    slider.value = state.len;
+    syncSliderUI();
+    save();
+    render();
+
+    // nav fade-out
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) { e.preventDefault(); document.body.classList.add("fade-out"); setTimeout(function () { window.location.href = link.getAttribute("href"); }, 300); });
+    });
+  })();
+  </script>
+</body>
+</html>

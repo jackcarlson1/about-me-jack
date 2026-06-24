@@ -402,6 +402,7 @@
     <button id="wantedButton">🚨 Most Wanted</button>
     <button id="weightsButton">🏋️ Weights</button>
     <button id="runButton">🏃 Run</button>
+    <button id="wordleButton">🟩 Wordle</button>
   </div>
 </div>
 
@@ -703,6 +704,11 @@
   const runButton = document.querySelector("#runButton");
   runButton.addEventListener("click", function () {
     window.location.href = "run.html";
+  });
+
+  const wordleButton = document.querySelector("#wordleButton");
+  wordleButton.addEventListener("click", function () {
+    window.location.href = "wordle.html";
   });
 
   const gavinWrap = document.querySelector("#gavinWrap");
