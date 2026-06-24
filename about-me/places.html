@@ -4,14 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Places — Jack Carlson</title>
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+  <script defer src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; color: #1a1a1a; background-color: #ffffff; }
+    body { margin: 0; color: var(--text); background-color: var(--bg); }
     .container { max-width: 820px; margin: 0 auto; padding: 32px 24px 60px; }
     h1 { font-weight: 700; text-align: center; margin-bottom: 4px; }
-    .subtitle { text-align: center; color: #777777; margin: 0 0 28px; }
+    .subtitle { text-align: center; color: var(--text-muted); margin: 0 0 28px; }
 
     .stats {
       display: flex;
@@ -34,7 +36,7 @@
     .stat .label { font-size: 12px; margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.92; }
 
     .controls { text-align: center; margin-bottom: 16px; }
-    #viewFilter { font-size: 16px; padding: 6px 10px; border-radius: 8px; }
+    #viewFilter { font-size: 16px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--surface); color: var(--text); }
 
     #chartWrap { position: relative; height: 360px; }
 
@@ -42,8 +44,8 @@
       display: none;
       margin-top: 16px;
       padding: 12px 16px;
-      background-color: #fff0f6;
-      border-left: 3px solid magenta;
+      background-color: var(--accent-soft-bg);
+      border-left: 3px solid var(--accent);
       border-radius: 6px;
       font-weight: 600;
     }
@@ -51,17 +53,17 @@
     #usMapWrap { display: none; margin: 8px auto 0; }
     #usMap { width: 100%; height: auto; display: block; }
     #usMap path {
-      fill: #e8e8e8;
-      stroke: #ffffff;
+      fill: var(--map-empty);
+      stroke: var(--map-stroke);
       stroke-width: 1;
       cursor: pointer;
       transition: fill 0.15s ease;
     }
-    #usMap path:hover { fill: #d4d4d4; }
-    #usMap path.visited { fill: #ff2e88; }
-    #usMap path.visited:hover { fill: #b3005e; }
-    #usMap path.home { fill: #ffb300; }
-    #usMap path.home:hover { fill: #e09e00; }
+    #usMap path:hover { fill: var(--map-empty-hover); }
+    #usMap path.visited { fill: var(--map-visited); }
+    #usMap path.visited:hover { fill: var(--map-visited-hover); }
+    #usMap path.home { fill: var(--map-home); }
+    #usMap path.home:hover { fill: var(--map-home-hover); }
 
     #europeMapWrap, #naMapWrap {
       display: none;
@@ -71,23 +73,23 @@
     }
     #europeMapWrap svg, #naMapWrap svg { width: 100%; height: 100%; display: block; }
     #europeMapWrap path, #naMapWrap path {
-      fill: #e8e8e8;
-      stroke: #ffffff;
+      fill: var(--map-empty);
+      stroke: var(--map-stroke);
       stroke-width: 0.2;
       cursor: pointer;
       transition: fill 0.15s ease;
     }
-    #europeMapWrap path:hover, #naMapWrap path:hover { fill: #d4d4d4; }
-    #europeMapWrap path.visited, #naMapWrap path.visited { fill: #ff2e88; }
-    #europeMapWrap path.visited:hover, #naMapWrap path.visited:hover { fill: #b3005e; }
-    #europeMapWrap path.home, #naMapWrap path.home { fill: #ffb300; }
-    #europeMapWrap path.home:hover, #naMapWrap path.home:hover { fill: #e09e00; }
+    #europeMapWrap path:hover, #naMapWrap path:hover { fill: var(--map-empty-hover); }
+    #europeMapWrap path.visited, #naMapWrap path.visited { fill: var(--map-visited); }
+    #europeMapWrap path.visited:hover, #naMapWrap path.visited:hover { fill: var(--map-visited-hover); }
+    #europeMapWrap path.home, #naMapWrap path.home { fill: var(--map-home); }
+    #europeMapWrap path.home:hover, #naMapWrap path.home:hover { fill: var(--map-home-hover); }
 
     #mapTooltip {
       position: fixed;
       display: none;
-      background-color: #1a1a1a;
-      color: #ffffff;
+      background-color: var(--tooltip-bg);
+      color: var(--tooltip-text);
       padding: 6px 10px;
       border-radius: 6px;
       font-size: 14px;
@@ -256,8 +258,12 @@
       let chart = null;
 
       // build (or rebuild) the chart from scratch — reliable for switching orientation
+      var lastView = null;
       function showView(labels, values, color, horizontal) {
         if (chart) { chart.destroy(); }
+        lastView = [labels, values, color, horizontal];
+        var dark = (function () { var t = document.documentElement.getAttribute("data-theme"); if (t === "dark") return true; if (t === "light") return false; return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches); })();
+        if (window.Chart) { Chart.defaults.color = dark ? "#b7bdc8" : "#666"; Chart.defaults.borderColor = dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.1)"; }
         chart = new Chart(canvas, {
           type: "bar",
           data: {
@@ -284,6 +290,10 @@
         "#ff2e88",
         false
       );
+
+      // recolor the chart when the theme flips (maps recolor themselves via CSS variables)
+      new MutationObserver(function () { if (lastView) showView(lastView[0], lastView[1], lastView[2], lastView[3]); })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
       function hideAll() {
         chartWrap.style.display = "none";

@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact — Jack Carlson</title>
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+  <script defer src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      color: #1a1a1a;
-      background-color: #ffffff;
+      color: var(--text);
+      background-color: var(--bg);
     }
     .container {
       max-width: 600px;
@@ -26,7 +28,7 @@
       margin: 18px 0;
     }
     .contact-row a {
-      color: magenta;
+      color: var(--accent-text);
       font-weight: 600;
       text-decoration: none;
     }
@@ -35,7 +37,7 @@
       min-width: 110px;
     }
     .soon {
-      color: #999999;
+      color: var(--text-muted);
     }
   </style>
 </head>

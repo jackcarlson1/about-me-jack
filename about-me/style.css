@@ -1,37 +1,198 @@
 /* ===========================================================
-   Shared styles — used by index.html, projects.html, contact.html
-   Linked into each page with: <link rel="stylesheet" href="style.css">
+   Shared styles + theme system
+   Linked into every page with: <link rel="stylesheet" href="style.css">
+   Dark / light / system handled with CSS variables (tokens).
    =========================================================== */
 
-/* Site-wide font (also applied to buttons, which don't inherit it by default) */
+/* ---------- LIGHT (default) tokens ---------- */
+:root {
+  color-scheme: light;
+
+  --bg:            #ffffff;   /* page background */
+  --bg-soft:       #f7f7fb;   /* dashboard page background (behind cards) */
+  --surface:       #ffffff;   /* cards */
+  --surface-2:     #faf7f9;   /* tinted form panels */
+  --surface-3:     #f0f0f0;   /* chips, pop-out menus */
+
+  --text:          #1a1a1a;
+  --text-soft:     #555555;
+  --text-muted:    #888888;
+  --text-faint:    #aaaaaa;
+
+  --border:        #e5e5e5;
+  --border-soft:   #ececef;
+  --input-border:  #cccccc;
+
+  --accent:        #ff2e88;
+  --accent-strong: #ff1a5e;
+  --accent-deep:   #b3005e;
+  --accent-text:   #ff2e88;   /* accent used as link text */
+  --accent-soft-bg:#fff0f6;
+
+  --good:          #16a34a;
+  --good-bg:       #f0fdf4;
+  --good-border:   #bbf7d0;
+  --warn:          #b8860b;
+  --warn-bg:       #fffbeb;
+  --warn-border:   #fde68a;
+  --info-bg:       #eff6ff;
+  --info-border:   #bfdbfe;
+  --danger:        #cc0000;
+
+  --shadow:        rgba(0, 0, 0, 0.05);
+  --shadow-md:     rgba(0, 0, 0, 0.12);
+  --shadow-lg:     rgba(0, 0, 0, 0.25);
+
+  /* data-viz: maps */
+  --map-empty:        #e8e8e8;
+  --map-empty-hover:  #d4d4d4;
+  --map-stroke:       #ffffff;
+  --map-visited:      #ff2e88;
+  --map-visited-hover:#b3005e;
+  --map-home:         #ffb300;
+  --map-home-hover:   #e09e00;
+
+  --tooltip-bg:    #1a1a1a;
+  --tooltip-text:  #ffffff;
+
+  --appbar-bg:     rgba(255, 255, 255, 0.92);
+}
+
+/* ---------- DARK tokens (hand-tuned, not an invert) ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:            #0e1116;
+  --bg-soft:       #0b0e13;
+  --surface:       #171b22;
+  --surface-2:     #1c212b;
+  --surface-3:     #232936;
+
+  --text:          #eceef2;
+  --text-soft:     #b7bdc8;
+  --text-muted:    #888f9c;
+  --text-faint:    #646b77;
+
+  --border:        #2a3140;
+  --border-soft:   #222836;
+  --input-border:  #353d4d;
+
+  --accent:        #ff4d97;
+  --accent-strong: #ff2e88;
+  --accent-deep:   #ff80b6;
+  --accent-text:   #ff6aa6;
+  --accent-soft-bg:#2a1622;
+
+  --good:          #34d399;
+  --good-bg:       #112a1f;
+  --good-border:   #1f5138;
+  --warn:          #fbbf24;
+  --warn-bg:       #2a2310;
+  --warn-border:   #5a4a17;
+  --info-bg:       #11203a;
+  --info-border:   #1e3a63;
+  --danger:        #ff6b6b;
+
+  --shadow:        rgba(0, 0, 0, 0.45);
+  --shadow-md:     rgba(0, 0, 0, 0.6);
+  --shadow-lg:     rgba(0, 0, 0, 0.7);
+
+  --map-empty:        #262c38;
+  --map-empty-hover:  #333a49;
+  --map-stroke:       #0e1116;
+  --map-visited:      #ff4d97;
+  --map-visited-hover:#ff7fb4;
+  --map-home:         #f5b942;
+  --map-home-hover:   #ffd27a;
+
+  --tooltip-bg:    #2b313c;
+  --tooltip-text:  #eceef2;
+
+  --appbar-bg:     rgba(16, 19, 24, 0.9);
+}
+
+/* Theme is an explicit choice only: light or dark (no system mode). */
+
+/* ---------- base ---------- */
 body, button {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-
-/* Smooth page fade-out used when navigating between pages */
 body {
+  background-color: var(--bg);
+  color: var(--text);
   transition: opacity 0.35s ease;
 }
-body.fade-out {
-  opacity: 0;
+body.fade-out { opacity: 0; }
+
+/* smooth, tasteful crossfade when the theme flips (structural elements only) */
+body, nav, .container, .card, .appbar, .tabbar, .widget, .stat, .mod,
+.listrow, .setline, .project-card, .contact-row, .day, .insight,
+input, select, textarea, .ex-tile, .ex-thumb {
+  transition: background-color 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
 }
 
-/* Top navigation bar (same on every page) */
+/* ---------- top navigation (same on every page) ---------- */
 nav {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   display: flex;
   gap: 24px;
   justify-content: center;
-  padding: 20px;
-  border-bottom: 1px solid #eeeeee;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border-soft);
 }
 nav a {
-  color: #555555;
+  color: var(--text-soft);
   text-decoration: none;
   font-weight: 600;
   font-size: 16px;
 }
-nav a.active {
-  color: magenta;
+nav a.active { color: var(--accent-text); }
+
+/* ---------- theme toggle (injected into nav by theme.js) ---------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-soft);
+  background-color: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 0.08s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.theme-toggle .tt-ic { font-size: 15px; }
+.theme-toggle:hover { color: var(--text); }
+.theme-toggle:active { transform: scale(0.94); }
+
+/* ---------- clean load-in animation (every page) ---------- */
+@keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* whole page eases in (opacity only — safe with fixed/sticky elements) */
+body { animation: pageFade 0.5s ease; }
+/* nav + main content lift in with a gentle stagger */
+nav { animation: riseIn 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 0.02s both; }
+.container { animation: riseIn 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s both; }
+
+/* respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  body, nav, .container { animation: none; }
+}
+
+/* narrow screens: keep the toggle from crowding the links */
+@media (max-width: 520px) {
+  nav { gap: 14px; padding: 14px 16px; }
+  nav a { font-size: 14px; }
+  .theme-toggle { padding: 0 10px; height: 30px; }
 }
