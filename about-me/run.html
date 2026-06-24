@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Run">
+  <meta name="theme-color" content="#ff2e88">
+  <title>Run — Jack Carlson</title>
+  <script>(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+  <script defer src="theme.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: var(--bg); }
+    .container { max-width: 680px; margin: 0 auto; padding: 16px 16px 60px; }
+    h1 { text-align: center; font-weight: 800; margin: 6px 0 2px; }
+    .sub { text-align: center; color: var(--text-muted); font-size: 13px; margin: 0 0 16px; }
+
+    .stage { position: relative; width: 100%; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px var(--shadow-lg); touch-action: none; user-select: none; }
+    canvas { display: block; width: 100%; height: auto; background: #06070f; }
+
+    /* overlays */
+    .panel { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; color: #fff; padding: 22px; background: rgba(4,5,12,0.72); backdrop-filter: blur(3px); }
+    .panel.hidden { display: none; }
+    .panel h2 { font-size: 30px; margin: 0 0 6px; text-shadow: 0 2px 12px rgba(255,46,136,0.6); }
+    .panel p { margin: 4px 0; opacity: 0.92; font-size: 15px; }
+    .big-score { font-size: 46px; font-weight: 900; color: #ff4d97; text-shadow: 0 0 22px rgba(255,77,151,0.7); margin: 6px 0; }
+    .newbest { color: #ffd27a; font-weight: 800; letter-spacing: 1px; }
+    .play-btn { margin-top: 14px; padding: 14px 30px; font-size: 18px; font-weight: 800; color: #fff; border: none; border-radius: 999px;
+      background: linear-gradient(135deg, #ff5a8a, #ff1a5e); cursor: pointer; box-shadow: 0 8px 20px rgba(255,26,94,0.5); }
+    .play-btn:active { transform: scale(0.96); }
+    .namewrap { margin-top: 12px; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .namewrap input { padding: 10px 12px; font-size: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1); color: #fff; width: 150px; text-align: center; }
+    .namewrap input::placeholder { color: rgba(255,255,255,0.55); }
+    .save-btn { padding: 10px 16px; font-size: 14px; font-weight: 700; border: none; border-radius: 10px; background: #fff; color: #c81e63; cursor: pointer; }
+    .save-btn:disabled { opacity: 0.5; cursor: default; }
+    .save-note { font-size: 12px; margin-top: 8px; opacity: 0.85; min-height: 16px; }
+
+    .hud { position: absolute; top: 12px; left: 14px; color: #fff; font-weight: 800; font-size: 20px; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+    .hud .best { font-size: 12px; font-weight: 600; opacity: 0.8; }
+    .hint { text-align: center; color: var(--text-muted); font-size: 13px; margin: 12px 0 0; }
+
+    .lb-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 18px; box-shadow: 0 1px 3px var(--shadow); }
+    .lb-card h2 { font-size: 17px; margin: 0 0 4px; }
+    .lb-mode { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .lb-row { display: flex; align-items: center; padding: 9px 12px; border: 1px solid var(--border-soft); border-radius: 10px; margin-bottom: 6px; background: var(--surface); }
+    .lb-row .rank { width: 30px; font-weight: 800; color: var(--text-muted); }
+    .lb-row .nm { flex: 1; font-weight: 700; }
+    .lb-row .sc { font-weight: 800; color: var(--accent-text); }
+    .lb-row.me { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,46,136,0.18); }
+    .lb-row .medal { width: 24px; }
+    .empty { color: var(--text-faint); text-align: center; margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+    <a href="places.html">Places</a>
+  </nav>
+
+  <div class="container">
+    <h1>🏃 Run</h1>
+    <p class="sub">Endless mode — jump the gaps, don't fall. It only gets faster.</p>
+
+    <div class="stage" id="stage">
+      <canvas id="game"></canvas>
+      <div class="hud"><span id="hudScore">0</span> m<div class="best" id="hudBest"></div></div>
+
+      <div class="panel" id="startPanel">
+        <h2>RUN</h2>
+        <p>Tap / click / Space to jump.</p>
+        <p>You can <b>double-jump</b>. Survive as long as you can.</p>
+        <button class="play-btn" id="startBtn">▶ Play</button>
+      </div>
+
+      <div class="panel hidden" id="overPanel">
+        <h2>Game Over</h2>
+        <div class="big-score"><span id="finalScore">0</span> m</div>
+        <p class="newbest" id="newBest" style="display:none;">★ NEW PERSONAL BEST ★</p>
+        <div class="namewrap">
+          <input id="nameInput" maxlength="12" placeholder="Your name" autocomplete="off">
+          <button class="save-btn" id="saveBtn">Save score</button>
+        </div>
+        <div class="save-note" id="saveNote"></div>
+        <button class="play-btn" id="againBtn">↻ Play again</button>
+      </div>
+    </div>
+
+    <p class="hint">Desktop: <b>Space</b> or click. Phone: <b>tap</b> the screen.</p>
+
+    <div class="lb-card">
+      <h2>🏆 Leaderboard</h2>
+      <div class="lb-mode" id="lbMode">…</div>
+      <div id="lbList"><p class="empty">Loading…</p></div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ============================================================
+    //  LEADERBOARD CONFIG
+    //  Leave blank = scores saved on THIS device only.
+    //  Fill both in (free JSONBin.io) = ONE global board across all
+    //  devices/phones. See the note Jack was given.
+    // ============================================================
+    var LB_BIN = "6a3c434eda38895dfef988ee";   // JSONBin bin id
+    var LB_KEY = "$2a$10$8zrZjXhDs25McAYhNFb70eYwC1mK.NwlHTEkXsXkg/Ai8ezkdHFCu";   // JSONBin X-Access-Key (read+update)
+    var GLOBAL = !!(LB_BIN && LB_KEY);
+    var LB_BASE = "https://api.jsonbin.io/v3/b/";
+
+    function lbLoad() {
+      if (GLOBAL) {
+        return fetch(LB_BASE + LB_BIN + "/latest", { headers: { "X-Access-Key": LB_KEY } })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(function (j) { return (j.record && j.record.scores) || []; });
+      }
+      return Promise.resolve(localLoad());
+    }
+    function lbSave(list) {
+      if (GLOBAL) {
+        return fetch(LB_BASE + LB_BIN, { method: "PUT", headers: { "Content-Type": "application/json", "X-Access-Key": LB_KEY }, body: JSON.stringify({ scores: list }) })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return true; });
+      }
+      localSave(list); return Promise.resolve(true);
+    }
+    function localLoad() { try { return JSON.parse(localStorage.getItem("run3_lb")) || []; } catch (e) { return []; } }
+    function localSave(list) { try { localStorage.setItem("run3_lb", JSON.stringify(list)); } catch (e) {} }
+
+    var lbCache = [];
+    function renderLeaderboard(highlightTs) {
+      var el = document.getElementById("lbList");
+      var list = lbCache.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 10);
+      if (!list.length) { el.innerHTML = '<p class="empty">No scores yet — be the first!</p>'; return; }
+      var medals = ["🥇", "🥈", "🥉"];
+      el.innerHTML = list.map(function (s, i) {
+        var me = highlightTs && s.ts === highlightTs ? " me" : "";
+        return '<div class="lb-row' + me + '"><span class="rank">' + (i + 1) + '</span>' +
+          '<span class="medal">' + (medals[i] || "") + '</span>' +
+          '<span class="nm">' + esc(s.name) + '</span><span class="sc">' + s.score + ' m</span></div>';
+      }).join("");
+    }
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+    function refreshLeaderboard() {
+      document.getElementById("lbMode").textContent = GLOBAL ? "🌍 Global — everyone who plays" : "📱 This device only (global board not set up yet)";
+      lbLoad().then(function (list) { lbCache = list; renderLeaderboard(); })
+        .catch(function () { lbCache = localLoad(); renderLeaderboard(); document.getElementById("lbMode").textContent = "📱 Couldn't reach global board — showing this device"; });
+    }
+
+    // ============================================================
+    //  GAME
+    // ============================================================
+    var canvas = document.getElementById("game");
+    var ctx = canvas.getContext("2d");
+    var stage = document.getElementById("stage");
+
+    var W = 0, H = 0, dpr = 1, floorY = 0;
+    function resize() {
+      var cssW = Math.min(stage.clientWidth || 640, 680);
+      var cssH = Math.max(300, Math.round(Math.min(window.innerHeight * 0.6, cssW * 0.62)));
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.style.height = cssH + "px";
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      W = cssW; H = cssH; floorY = Math.round(H * 0.74);
+    }
+
+    // constants (per 60fps frame; movement scaled by dt)
+    var G = 0.62, JUMP = -12.2, PLAYER_X = Math.round, BASE_SPEED = 3.3;
+    var player, platforms, nextX, dist, speed, running, dead, last, score, best;
+    var stars1 = [], stars2 = [];
+
+    function makeStars() {
+      stars1 = []; stars2 = [];
+      for (var i = 0; i < 60; i++) stars1.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + 0.3 });
+      for (var j = 0; j < 30; j++) stars2.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.8 + 0.8 });
+    }
+
+    function loadBest() { try { return parseInt(localStorage.getItem("run3_best"), 10) || 0; } catch (e) { return 0; } }
+    function saveBest(v) { try { localStorage.setItem("run3_best", String(v)); } catch (e) {} }
+
+    function reset() {
+      player = { x: Math.round(W * 0.22), y: floorY - 34, vy: 0, size: 34, jumps: 0, onGround: true, squash: 0 };
+      platforms = [];
+      dist = 0; speed = BASE_SPEED; dead = false; score = 0;
+      // start with a long safe platform
+      platforms.push({ x: 0, w: W * 1.4 });
+      nextX = W * 1.4 + gap();
+      best = loadBest();
+      document.getElementById("hudBest").textContent = best ? "best " + best + " m" : "";
+    }
+
+    function plWidth() { return rand(95, 230); }
+    function gap() {
+      var airtime = 2 * Math.abs(JUMP) / G;            // frames in the air
+      var reach = airtime * speed;                      // px a single jump covers
+      var max = Math.max(70, Math.min(reach * 0.62, 250));
+      return rand(60, max);
+    }
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function generate() {
+      // keep generating platforms a bit beyond the right edge
+      while (nextX < dist + W + 400) {
+        var w = plWidth();
+        platforms.push({ x: nextX, w: w });
+        nextX += w + gap();
+      }
+      // drop platforms fully off the left
+      while (platforms.length && platforms[0].x + platforms[0].w < dist - 60) platforms.shift();
+    }
+
+    function jump() {
+      if (!running || dead) return;
+      if (player.onGround) { player.vy = JUMP; player.onGround = false; player.jumps = 1; }
+      else if (player.jumps < 2) { player.vy = JUMP * 0.92; player.jumps = 2; }
+    }
+
+    function update(dt) {
+      dist += speed * dt;
+      speed = Math.min(8.5, BASE_SPEED + dist * 0.0007);
+      generate();
+
+      player.vy += G * dt;
+      player.y += player.vy * dt;
+      if (player.squash > 0) player.squash = Math.max(0, player.squash - 0.08 * dt);
+
+      // is there floor under the player's center?
+      var centerWorld = dist + player.x + player.size / 2;
+      var hasFloor = false;
+      for (var i = 0; i < platforms.length; i++) {
+        var p = platforms[i];
+        if (centerWorld >= p.x && centerWorld <= p.x + p.w) { hasFloor = true; break; }
+      }
+      if (hasFloor && player.vy >= 0 && player.y + player.size >= floorY) {
+        if (!player.onGround) player.squash = 1;
+        player.y = floorY - player.size; player.vy = 0; player.onGround = true; player.jumps = 0;
+      } else {
+        player.onGround = false;
+      }
+
+      score = Math.floor(dist / 12);
+      document.getElementById("hudScore").textContent = score;
+
+      if (player.y > H + 80) gameOver();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      // space background
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#0a0b1a"); g.addColorStop(1, "#06070f");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+      // stars (parallax)
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      var i, s, sx;
+      for (i = 0; i < stars1.length; i++) { s = stars1[i]; sx = (s.x * W - dist * 0.15) % W; if (sx < 0) sx += W; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(sx, s.y * H, s.r, 0, 7); ctx.fill(); }
+      for (i = 0; i < stars2.length; i++) { s = stars2[i]; sx = (s.x * W - dist * 0.35) % W; if (sx < 0) sx += W; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.arc(sx, s.y * H, s.r, 0, 7); ctx.fill(); }
+      ctx.globalAlpha = 1;
+
+      // platforms (neon)
+      ctx.save();
+      ctx.shadowColor = "rgba(255,46,136,0.8)"; ctx.shadowBlur = 18;
+      for (i = 0; i < platforms.length; i++) {
+        var p = platforms[i];
+        var x = p.x - dist;
+        if (x > W || x + p.w < 0) continue;
+        var grad = ctx.createLinearGradient(0, floorY, 0, floorY + 22);
+        grad.addColorStop(0, "#ff4d97"); grad.addColorStop(1, "#b3005e");
+        ctx.fillStyle = grad;
+        roundRect(x, floorY, p.w, 26, 6); ctx.fill();
+        // top highlight line
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillRect(x + 4, floorY + 2, Math.max(0, p.w - 8), 2);
+        ctx.shadowBlur = 18;
+      }
+      ctx.restore();
+
+      // player
+      var px = player.x, py = player.y, sz = player.size;
+      var sq = player.squash; // 0..1
+      var w = sz * (1 + sq * 0.25), h = sz * (1 - sq * 0.25);
+      var dx = px + (sz - w) / 2, dy = py + (sz - h);
+      ctx.save();
+      ctx.shadowColor = "rgba(120,200,255,0.9)"; ctx.shadowBlur = 16;
+      var pg = ctx.createLinearGradient(dx, dy, dx, dy + h);
+      pg.addColorStop(0, "#bfe6ff"); pg.addColorStop(1, "#5bb8ff");
+      ctx.fillStyle = pg;
+      roundRect(dx, dy, w, h, 9); ctx.fill();
+      // eye / visor
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#0a2540";
+      roundRect(dx + w * 0.5, dy + h * 0.26, w * 0.34, h * 0.26, 4); ctx.fill();
+      ctx.restore();
+    }
+
+    function roundRect(x, y, w, h, r) {
+      r = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function loop(now) {
+      if (!running) return;
+      var dt = Math.min(2.5, (now - last) / 16.6667) || 1;
+      last = now;
+      if (!dead) { update(dt); draw(); }
+      requestAnimationFrame(loop);
+    }
+
+    function start() {
+      resize(); makeStars(); reset();
+      running = true; dead = false;
+      document.getElementById("startPanel").classList.add("hidden");
+      document.getElementById("overPanel").classList.add("hidden");
+      last = performance.now();
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver() {
+      dead = true; running = false;
+      var fs = document.getElementById("finalScore");
+      fs.textContent = score;
+      var isBest = score > best;
+      if (isBest) { best = score; saveBest(best); }
+      document.getElementById("newBest").style.display = isBest ? "block" : "none";
+      var saveBtn = document.getElementById("saveBtn");
+      saveBtn.disabled = false; saveBtn.textContent = "Save score";
+      document.getElementById("saveNote").textContent = "";
+      var ni = document.getElementById("nameInput");
+      try { ni.value = localStorage.getItem("run3_name") || ""; } catch (e) {}
+      document.getElementById("overPanel").classList.remove("hidden");
+    }
+
+    function submitScore() {
+      var ni = document.getElementById("nameInput");
+      var name = (ni.value || "").trim().slice(0, 12) || "Anon";
+      try { localStorage.setItem("run3_name", name); } catch (e) {}
+      var entry = { name: name, score: score, ts: Date.now() };
+      var btn = document.getElementById("saveBtn");
+      var note = document.getElementById("saveNote");
+      btn.disabled = true; btn.textContent = "Saving…";
+      lbLoad().then(function (list) {
+        list = (list || []).concat([entry]);
+        list.sort(function (a, b) { return b.score - a.score; });
+        list = list.slice(0, 25);
+        return lbSave(list).then(function () { lbCache = list; });
+      }).then(function () {
+        renderLeaderboard(entry.ts);
+        btn.textContent = "Saved ✓";
+        note.textContent = GLOBAL ? "Posted to the global leaderboard!" : "Saved on this device.";
+        document.querySelector(".lb-card").scrollIntoView({ behavior: "smooth", block: "center" });
+      }).catch(function () {
+        // remote failed -> save locally so the score isn't lost
+        var loc = localLoad(); loc.push(entry); loc.sort(function (a, b) { return b.score - a.score; }); localSave(loc.slice(0, 25));
+        lbCache = loc; renderLeaderboard(entry.ts);
+        btn.disabled = false; btn.textContent = "Save score";
+        note.textContent = "Couldn't reach the global board — saved on this device.";
+      });
+    }
+
+    // input
+    function onJumpKey(e) { if (e.code === "Space" || e.code === "ArrowUp" || e.key === " ") { e.preventDefault(); jump(); } }
+    window.addEventListener("keydown", onJumpKey);
+    stage.addEventListener("mousedown", function (e) { if (running && !dead) { e.preventDefault(); jump(); } });
+    stage.addEventListener("touchstart", function (e) { if (running && !dead) { e.preventDefault(); jump(); } }, { passive: false });
+
+    document.getElementById("startBtn").addEventListener("click", start);
+    document.getElementById("againBtn").addEventListener("click", start);
+    document.getElementById("saveBtn").addEventListener("click", submitScore);
+    document.getElementById("nameInput").addEventListener("keydown", function (e) { if (e.key === "Enter") submitScore(); });
+    window.addEventListener("resize", function () { if (!running) { resize(); } });
+
+    // boot
+    resize(); makeStars();
+    best = loadBest();
+    document.getElementById("hudBest").textContent = best ? "best " + best + " m" : "";
+    // draw a static preview frame behind the start panel
+    reset(); draw();
+    refreshLeaderboard();
+
+    // nav fade-out
+    document.querySelectorAll("nav a").forEach(function (link) {
+      link.addEventListener("click", function (e) { e.preventDefault(); document.body.classList.add("fade-out"); setTimeout(function () { window.location.href = link.getAttribute("href"); }, 300); });
+    });
+  })();
+  </script>
+</body>
+</html>

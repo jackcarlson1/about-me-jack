@@ -401,6 +401,7 @@
     <button id="chartButton">🎵 Music replay</button>
     <button id="wantedButton">🚨 Most Wanted</button>
     <button id="weightsButton">🏋️ Weights</button>
+    <button id="runButton">🏃 Run</button>
   </div>
 </div>
 
@@ -415,7 +416,7 @@
     <h2>About Me</h2>
     <button id="factButton">Tell me a fact</button>
   </div>
-  <p>	My upcoming junior year of highschool is going to be my busiest yet. I am enrolled in three AP classes (AP Lang, AP Seminar, AP United States History), aswell as a new elective, Personal Finance. I plan on becoming a representative for our student council. I am aswell participating in track and newly football.</p>
+  <p>	My upcoming junior year of highschool is going to be my busiest yet. I am enrolled in three AP classes (AP Lang, AP Seminar, AP United States History). I plan on becoming a representative for our student council. I am aswell participating in track and newly football.</p>
   <p>	Outside of school, my favorite things to do consist of being with friends, weightlifting, and the occasional money-making method. In 7th grade, I started an eBay page and resold shoes for a profit aswell as selling my friend's things and taking a percentage. Me and my friend, Gavin, also painted mailboxes sporadically over the course of roughly 2.5 years. Since only a couple months old, I have always been traveling. In Bodrum, Turkey, we have a house on a hill, a lovely view, and a cat that was born in our backyard. My mother is a nautical archaeologist and father, a former deputy sheriff.</p>
 </section>
 
@@ -697,6 +698,11 @@
   const weightsButton = document.querySelector("#weightsButton");
   weightsButton.addEventListener("click", function () {
     window.location.href = "weights.html";
+  });
+
+  const runButton = document.querySelector("#runButton");
+  runButton.addEventListener("click", function () {
+    window.location.href = "run.html";
   });
 
   const gavinWrap = document.querySelector("#gavinWrap");
